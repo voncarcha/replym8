@@ -146,7 +146,7 @@ export function DashboardSidebar() {
           <span>38 / 50</span>
         </div>
         <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-          <div className="h-full w-3/4 bg-gradient-to-r from-sky-500 to-emerald-400" />
+          <div className="h-full w-3/4 bg-linear-to-r from-sky-500 to-emerald-400" />
         </div>
         <Button
           variant="outline"
@@ -154,7 +154,7 @@ export function DashboardSidebar() {
         >
           Upgrade plan
         </Button>
-        <div className="relative w-full mt-2">
+        <div className="relative w-full mt-1">
           <Button
             variant="outline"
             onClick={handleMyAccountClick}

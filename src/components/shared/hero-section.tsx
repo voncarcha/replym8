@@ -4,7 +4,7 @@ import { DashboardPreview } from "./dashboard-preview";
 
 export function HeroSection() {
   return (
-    <section className="border-b border-border bg-gradient-to-b from-background via-background to-background">
+    <section className="border-b border-border bg-linear-to-b from-background via-background to-background">
       <div className="mx-auto max-w-6xl w-full px-4 sm:px-6 py-10 sm:py-14 lg:py-20 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] items-center">
         {/* Hero Left */}
         <div className="space-y-6">

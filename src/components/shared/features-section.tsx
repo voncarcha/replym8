@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Box, ArrowLeftRight, TrendingUp } from "lucide-react";
 
 export function FeaturesSection() {
@@ -11,8 +11,8 @@ export function FeaturesSection() {
               Built around people, not just messages.
             </h2>
             <p className="text-sm sm:text-base text-muted-foreground mt-1 max-w-xl">
-              ReplyM8 remembers how each recipient prefers to communicate, and quietly shapes every
-              reply to match.
+              ReplyM8 remembers how each recipient prefers to communicate, and
+              quietly shapes every reply to match.
             </p>
           </div>
           <div className="flex gap-2 text-[0.7rem] text-muted-foreground">
@@ -36,11 +36,13 @@ export function FeaturesSection() {
                 </div>
                 Recipient profiles
               </div>
-              <span className="text-[0.65rem] text-muted-foreground">Profiles</span>
+              <span className="text-[0.65rem] text-muted-foreground">
+                Profiles
+              </span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Capture tone, formality, and preferences for each client, lead, or teammate.
-              ReplyM8 keeps them up to date from real conversations.
+              Capture tone, formality, and preferences for each client, lead, or
+              teammate. ReplyM8 keeps them up to date from real conversations.
             </p>
             <div className="mt-auto rounded-lg border border-border bg-muted/70 p-3 space-y-2">
               <div className="flex items-center justify-between text-xs">
@@ -73,17 +75,22 @@ export function FeaturesSection() {
                 </div>
                 Context-aware replies
               </div>
-              <span className="text-[0.65rem] text-muted-foreground">Generator</span>
+              <span className="text-[0.65rem] text-muted-foreground">
+                Generator
+              </span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Paste a message or upload a thread. ReplyM8 reads the context and personalizes your
-              response to the right tone and length.
+              Paste a message or upload a thread. ReplyM8 reads the context and
+              personalizes your response to the right tone and length.
             </p>
             <div className="mt-auto rounded-lg border border-border bg-muted/70 p-3 space-y-2 text-[0.75rem]">
-              <div className="text-muted-foreground">&ldquo;Hey, can we push our check-in?&rdquo;</div>
+              <div className="text-muted-foreground">
+                &ldquo;Hey, can we push our check-in?&rdquo;
+              </div>
               <div className="rounded-lg bg-background/70 border border-border p-2 mt-1">
                 <span className="block text-foreground">
-                  Absolutely—happy to move it. What works best for you tomorrow afternoon?
+                  Absolutely—happy to move it. What works best for you tomorrow
+                  afternoon?
                 </span>
                 <div className="mt-1 flex justify-between items-center text-[0.65rem] text-muted-foreground">
                   <span>Casual · friendly</span>
@@ -102,11 +109,13 @@ export function FeaturesSection() {
                 </div>
                 Credits &amp; control
               </div>
-              <span className="text-[0.65rem] text-muted-foreground">Usage</span>
+              <span className="text-[0.65rem] text-muted-foreground">
+                Usage
+              </span>
             </div>
             <p className="text-sm text-muted-foreground">
-              See how many replies you&apos;ve generated today, where profiles are used most, and
-              stay within your plan—no surprises.
+              See how many replies you&apos;ve generated today, where profiles
+              are used most, and stay within your plan—no surprises.
             </p>
             <div className="mt-auto space-y-3">
               <div className="rounded-lg border border-border bg-muted/70 p-3 space-y-2 text-[0.75rem]">
@@ -122,7 +131,8 @@ export function FeaturesSection() {
                 <span>Most used: Client profiles</span>
                 <span className="inline-flex items-center gap-1">
                   <span className="h-2 w-2 rounded-full bg-sky-400" /> Sales
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 ml-2" /> Support
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 ml-2" />{" "}
+                  Support
                 </span>
               </div>
             </div>
@@ -132,4 +142,3 @@ export function FeaturesSection() {
     </section>
   );
 }
-
