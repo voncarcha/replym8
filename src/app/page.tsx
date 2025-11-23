@@ -7,7 +7,7 @@ import { TestimonialsSection } from "@/components/shared/testimonials-section";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       <LandingNavbar />
       <main className="flex-1 overflow-y-auto">
         <HeroSection />
