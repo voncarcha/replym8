@@ -31,10 +31,6 @@ export function DashboardPreview() {
               </div>
               <div className="flex justify-between items-center text-[0.65rem] text-slate-500">
                 <span>Detected: formal · concise · high priority</span>
-                <span className="inline-flex items-center gap-1 cursor-pointer hover:text-slate-400">
-                  <X className="h-3 w-3 text-slate-400" />
-                  Clear
-                </span>
               </div>
             </div>
             <div className="flex flex-wrap gap-2 text-[0.65rem]">
@@ -52,7 +48,7 @@ export function DashboardPreview() {
           </div>
 
           {/* Right: output */}
-          <div className="space-y-3">
+          <div className="space-y-2 mt-[-5px]">
             <div className="flex items-center justify-between">
               <span className="text-[0.7rem] font-medium text-slate-300">
                 Suggested reply

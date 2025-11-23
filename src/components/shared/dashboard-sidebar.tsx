@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { UserButton } from "@clerk/nextjs";
 
 const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -100,6 +101,20 @@ export function DashboardSidebar() {
         >
           Upgrade plan
         </Button>
+        <div className="flex items-center justify-center pt-2">
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: "h-8 w-8 bg-white border-2 border-slate-700",
+                userButtonAvatarBox: "bg-white",
+                userButtonPopoverCard: "bg-slate-900 border-slate-800",
+                userButtonPopoverActionButton: "text-slate-100 hover:bg-slate-800",
+                userButtonPopoverActionButtonText: "text-slate-300",
+                userButtonPopoverFooter: "hidden",
+              },
+            }}
+          />
+        </div>
       </div>
     </aside>
   );

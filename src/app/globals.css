@@ -87,4 +87,10 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* Clerk Avatar Box Styling */
+  .cl-avatarBox {
+    background-color: white !important;
+    border: 2px solid rgb(51 65 85) !important; /* slate-700 */
+  }
 }

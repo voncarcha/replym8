@@ -1,8 +1,16 @@
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Sparkles, Upload } from "lucide-react";
 import Link from "next/link";
+import { currentUser } from "@clerk/nextjs/server";
+import Image from "next/image";
 
-export default function DashboardHomePage() {
+export default async function DashboardHomePage() {
+  const user = await currentUser();
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <>
       {/* Header */}
@@ -22,6 +30,43 @@ export default function DashboardHomePage() {
             Live
           </span>
         </div>
+      </div>
+
+      {/* User Profile Card */}
+      <div className="px-4 sm:px-5 py-4">
+        <Card className="rounded-xl border-slate-800 bg-slate-950/80">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium tracking-tight text-slate-100">
+              Your Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center gap-4">
+            <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-slate-700 bg-white">
+              {user.imageUrl ? (
+                <Image
+                  src={user.imageUrl}
+                  alt={user.firstName || "User"}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-slate-800 flex items-center justify-center text-slate-300 text-lg font-semibold">
+                  {user.firstName?.[0] || user.emailAddresses[0]?.emailAddress[0].toUpperCase() || "U"}
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <h4 className="text-base font-medium text-slate-50">
+                {user.firstName && user.lastName
+                  ? `${user.firstName} ${user.lastName}`
+                  : user.firstName || "User"}
+              </h4>
+              <p className="text-sm text-slate-400 mt-1">
+                {user.emailAddresses[0]?.emailAddress}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Content */}

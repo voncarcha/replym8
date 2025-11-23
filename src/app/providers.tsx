@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { ClerkProvider } from "@clerk/nextjs";
 import { useThemeStore } from "@/lib/store";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -21,6 +22,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
-  return <>{children}</>;
+  return (
+    <ClerkProvider>
+      {children}
+    </ClerkProvider>
+  );
 }
 

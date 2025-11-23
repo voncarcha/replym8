@@ -42,7 +42,7 @@ export default function ProfilesPage() {
         </div>
 
         {/* Profile list */}
-        <div className="space-y-2 flex flex-col gap-2">
+        <div className="space-y-2 flex flex-col gap-1">
           <Link href="/dashboard/profiles/lena">
             <Card className="rounded-xl border-slate-800 bg-slate-950/80 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-900/50 transition-colors cursor-pointer">
               <div className="flex items-start gap-3">
