@@ -1,0 +1,85 @@
+# Cursor Rules for ReplyM8 Project
+
+## General Project Setup
+
+- Always use Next.js App Router with TypeScript.
+- Use TailwindCSS for styling.
+- Use shadcn/ui components when possible instead of custom ones.
+- Follow clean folder structure under src/: app/, components/, lib/, hooks/, utils/, types/.
+- Use absolute imports via @/ alias.
+- Enable dark mode using class strategy in Tailwind.
+
+## Component Conversion Rules (HTML → JSX)
+
+- When the user provides HTML + Tailwind code, convert it into React Server Components unless interactivity is needed.
+- Always convert `class` to `className`.
+- Refactor repeated UI blocks into reusable React components.
+- Use functional components with named exports.
+- Extract shared components like Navbar, Footer, Hero, Card, Button, Badge, etc.
+- Utilize shadcn/ui components for buttons, cards, dialogs, dropdowns, forms, inputs, alerts.
+
+## Component Architecture
+
+- Place UI primitives (from shadcn) in src/components/ui/.
+- Place custom components in src/components/shared/.
+- Group route-specific components inside app/(segment)/components/.
+- Put non-component logic in lib/ or utils/.
+- Never put business logic inside React components unless simple.
+
+## Next.js App Router Rules
+
+- Use layout.tsx and page.tsx in every route.
+- Use metadata export for SEO in each layout or page.
+- Place global providers in src/app/providers.tsx and import them in root layout.
+- Use Next.js Image and Link components where applicable.
+
+## State Management
+
+- Use React state sparingly; prefer server components unless client-side interactivity is needed.
+- For shared state, use Zustand.
+- For data fetching, use React Query or server actions when appropriate.
+
+## File Naming and Code Style
+
+- Use PascalCase for components.
+- Use camelCase for utilities and functions.
+- Name hooks with `use` prefix.
+- Do not leave dead code, console.logs, or unused imports.
+- Type everything with TypeScript.
+- Prefer async/await over .then().
+
+## Tailwind Standards
+
+- Use Tailwind for layout and spacing.
+- Avoid long utility chains by using componentized class merging utilities when needed.
+- Use `cn()` helper for conditional classes.
+- Use container classes for consistent layout.
+
+## UI/UX Quality Rules
+
+- Ensure mobile responsiveness first.
+- Use consistent spacing: multiples of 2 or 4.
+- Avoid inline styles unless absolutely necessary.
+- Use appropriate aria attributes for accessibility.
+- Use shadcn modal/dialog/dropdown components for interactivity.
+
+## When generating pages
+
+- Always include <Metadata> export.
+- Wrap content in a responsive container class.
+- Use a consistent page heading structure (h1, h2, h3).
+
+## Code Comments & Cleanliness
+
+- Add comments only when necessary.
+- Do not generate overly verbose comments.
+- Explain complex logic inside comments when needed.
+
+## Final Output Rules
+
+- Always generate fully functional, runnable code.
+- Follow conventions across the entire project.
+- If user provides unclear instructions, ask clarifying questions.
+- Never invent APIs or features unless explicitly requested.
+- Ensure all generated components compile without errors.
+
