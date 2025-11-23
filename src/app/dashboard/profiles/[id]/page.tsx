@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Trash2, Save, Upload } from "lucide-react";
 
 export default function ProfileDetailsPage({

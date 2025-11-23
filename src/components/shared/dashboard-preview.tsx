@@ -62,8 +62,6 @@ export function DashboardPreview() {
                 <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-900 rounded-full px-1.5 py-0.5">
                   Short
                 </span>
-                <span className="text-slate-500">Medium</span>
-                <span className="text-slate-500">Long</span>
               </div>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3 space-y-2">

@@ -5,7 +5,7 @@ import { DashboardPreview } from "./dashboard-preview";
 export function HeroSection() {
   return (
     <section className="border-b border-slate-900 bg-gradient-to-b from-slate-950 via-slate-950 to-slate-950">
-      <div className="mx-auto max-w-6xl w-full px-4 sm:px-6 py-10 sm:py-14 lg:py-20 grid gap-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] items-center">
+      <div className="mx-auto max-w-6xl w-full px-4 sm:px-6 py-10 sm:py-14 lg:py-20 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] items-center">
         {/* Hero Left */}
         <div className="space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/60 text-[0.7rem] sm:text-xs text-slate-300 px-2.5 py-1">
@@ -19,8 +19,9 @@ export function HeroSection() {
               <br className="hidden sm:block" /> for every person you talk to.
             </h1>
             <p className="text-sm sm:text-base text-slate-300 max-w-xl">
-              ReplyM8 builds a living profile for each recipient—tone, preferences, and past
-              context—so every email, chat, or DM feels personal and on point in seconds.
+              ReplyM8 builds a living profile for each recipient—tone,
+              preferences, and past context—so every email, chat, or DM feels
+              personal and on point in seconds.
             </p>
           </div>
 
@@ -60,4 +61,3 @@ export function HeroSection() {
     </section>
   );
 }
-

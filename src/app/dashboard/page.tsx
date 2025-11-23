@@ -1,6 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus, Sparkles, Upload, Folder } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Plus, Sparkles, Upload } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardHomePage() {
@@ -38,10 +37,13 @@ export default function DashboardHomePage() {
                   </div>
                   Create profile
                 </div>
-                <span className="text-[0.8125rem] text-slate-400">Profiles</span>
+                <span className="text-[0.8125rem] text-slate-400">
+                  Profiles
+                </span>
               </div>
               <p className="text-sm sm:text-sm text-slate-300">
-                Add a new recipient with tone, preferences, and conversation history.
+                Add a new recipient with tone, preferences, and conversation
+                history.
               </p>
             </Card>
           </Link>
@@ -55,7 +57,9 @@ export default function DashboardHomePage() {
                   </div>
                   Generate reply
                 </div>
-                <span className="text-[0.8125rem] text-slate-400">Generator</span>
+                <span className="text-[0.8125rem] text-slate-400">
+                  Generator
+                </span>
               </div>
               <p className="text-sm sm:text-sm text-slate-300">
                 Paste a message, pick a profile, and get a ready-to-send reply.
@@ -72,7 +76,9 @@ export default function DashboardHomePage() {
                   </div>
                   Upload conversation
                 </div>
-                <span className="text-[0.8125rem] text-slate-400">Conversations</span>
+                <span className="text-[0.8125rem] text-slate-400">
+                  Conversations
+                </span>
               </div>
               <p className="text-sm sm:text-sm text-slate-300">
                 Drop in screenshots or text threads to enrich a profile.
@@ -94,7 +100,9 @@ export default function DashboardHomePage() {
                   How ReplyM8 is helping you right now.
                 </p>
               </div>
-              <span className="text-[0.8125rem] text-slate-400">Updated just now</span>
+              <span className="text-[0.8125rem] text-slate-400">
+                Updated just now
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="rounded-lg border border-slate-800 bg-slate-950 p-3">
@@ -102,21 +110,27 @@ export default function DashboardHomePage() {
                 <div className="text-2xl font-semibold tracking-tight text-slate-50 mt-1">
                   38
                 </div>
-                <div className="text-[0.8125rem] text-emerald-400 mt-0.5">+26 vs avg</div>
+                <div className="text-[0.8125rem] text-emerald-400 mt-0.5">
+                  +26 vs avg
+                </div>
               </div>
               <div className="rounded-lg border border-slate-800 bg-slate-950 p-3">
                 <div className="text-sm text-slate-300">Profiles used</div>
                 <div className="text-2xl font-semibold tracking-tight text-slate-50 mt-1">
                   9
                 </div>
-                <div className="text-[0.8125rem] text-slate-400 mt-0.5">Out of 12 total</div>
+                <div className="text-[0.8125rem] text-slate-400 mt-0.5">
+                  Out of 12 total
+                </div>
               </div>
               <div className="rounded-lg border border-slate-800 bg-slate-950 p-3">
                 <div className="text-sm text-slate-300">Avg length</div>
                 <div className="text-2xl font-semibold tracking-tight text-slate-50 mt-1">
                   Short
                 </div>
-                <div className="text-[0.8125rem] text-slate-400 mt-0.5">65 words</div>
+                <div className="text-[0.8125rem] text-slate-400 mt-0.5">
+                  65 words
+                </div>
               </div>
             </div>
           </Card>
@@ -148,7 +162,9 @@ export default function DashboardHomePage() {
                       </div>
                     </div>
                   </div>
-                  <span className="text-[0.75rem] text-slate-400">Updated 2h ago</span>
+                  <span className="text-[0.75rem] text-slate-400">
+                    Updated 2h ago
+                  </span>
                 </div>
               </Link>
               <Link href="/dashboard/profiles/acme">
@@ -159,10 +175,14 @@ export default function DashboardHomePage() {
                     </div>
                     <div>
                       <div className="text-slate-100">ACME · Customer team</div>
-                      <div className="text-[0.75rem] text-slate-400">Group · Weekly reports</div>
+                      <div className="text-[0.75rem] text-slate-400">
+                        Group · Weekly reports
+                      </div>
                     </div>
                   </div>
-                  <span className="text-[0.75rem] text-slate-400">Updated 1d ago</span>
+                  <span className="text-[0.75rem] text-slate-400">
+                    Updated 1d ago
+                  </span>
                 </div>
               </Link>
             </div>
