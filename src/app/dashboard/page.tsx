@@ -7,6 +7,7 @@ import Image from "next/image";
 export default async function DashboardHomePage() {
   const user = await currentUser();
 
+  // AuthGuard ensures user exists, but TypeScript needs this check
   if (!user) {
     return null;
   }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DashboardSidebar } from "@/components/shared/dashboard-sidebar";
+import { AuthGuard } from "@/components/auth/auth-guard";
 
 export const metadata: Metadata = {
   title: "Dashboard | ReplyM8",
@@ -12,13 +13,15 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="flex flex-col lg:flex-row min-h-screen">
-        <DashboardSidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {children}
+    <AuthGuard>
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <div className="flex flex-col lg:flex-row min-h-screen">
+          <DashboardSidebar />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {children}
+          </div>
         </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

@@ -1,6 +1,12 @@
+"use client";
+
 import { SignIn } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
 
 export default function SignInPage() {
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect_url") || "/dashboard";
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
       <div className="w-full max-w-md">
@@ -16,7 +22,7 @@ export default function SignInPage() {
           routing="path"
           path="/sign-in"
           signUpUrl="/sign-up"
-          afterSignInUrl="/dashboard"
+          afterSignInUrl={redirectUrl}
           fallbackRedirectUrl="/dashboard"
           appearance={{
             elements: {
