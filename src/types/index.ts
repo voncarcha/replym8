@@ -17,14 +17,36 @@ export interface User {
 
 export type ProfileType = 'individual' | 'group';
 
+export type Formality = 'Formal' | 'Neutral' | 'Casual';
+export type Friendliness = 'Friendly' | 'Neutral' | 'Reserved';
+export type PreferredLength = 'Short' | 'Medium' | 'Long';
+export type EmojiUsage = 'None' | 'Minimal' | 'Allowed';
+
+export interface TonePreferences {
+  formality: Formality;
+  friendliness: Friendliness;
+  preferredLength: PreferredLength;
+  emojiUsage: EmojiUsage;
+  tags: string[];
+}
+
 export interface Profile {
   id: string; // UUID
   user_id: string; // text
   name: string;
   description: string | null;
   type: ProfileType;
-  tone_preferences: Record<string, unknown>; // JSONB
+  tone_preferences: TonePreferences; // JSONB
+  relationship_type: string;
   created_at: Date;
+}
+
+export interface CreateProfileInput {
+  name: string;
+  type: ProfileType;
+  relationship_type: string;
+  tone_preferences: TonePreferences;
+  description?: string | null;
 }
 
 export interface ProfileMember {

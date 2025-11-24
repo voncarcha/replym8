@@ -124,7 +124,7 @@ export function FeaturesSection() {
                   <span className="text-muted-foreground">38 / 50</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full w-3/4 bg-gradient-to-r from-sky-500 to-emerald-400" />
+                  <div className="h-full w-3/4 bg-linear-to-r from-sky-500 to-emerald-400" />
                 </div>
               </div>
               <div className="flex items-center justify-between text-[0.65rem] text-muted-foreground">
