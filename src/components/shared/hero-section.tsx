@@ -26,7 +26,7 @@ export function HeroSection() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-            <Button className="inline-flex items-center justify-center gap-2 rounded-lg bg-sky-500 text-white dark:text-slate-950 text-sm font-medium tracking-tight px-4 sm:px-5 py-2.5 hover:bg-sky-400 shadow-sm shadow-sky-500/40">
+            <Button className="inline-flex items-center justify-center gap-2 rounded-lg bg-sky-500 text-white text-sm font-medium tracking-tight px-4 sm:px-5 py-2.5 hover:bg-sky-400 shadow-sm shadow-sky-500/40">
               <span>Generate smarter replies</span>
               <ArrowUpRight className="h-4 w-4" />
             </Button>

@@ -40,7 +40,7 @@ import {
 } from "./simple-profile-schema";
 import { GroupMember } from "./group-member";
 import { CreateProfileInput } from "@/types";
-import { createProfile } from "@/app/actions/profile";
+import { createProfile, updateProfile, ProfileWithMembers } from "@/app/actions/profile";
 
 const SUGGESTED_TAGS = [
   "Bullet points",
@@ -62,10 +62,12 @@ interface SimpleProfileFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
   onSubmittingChange?: (isSubmitting: boolean) => void;
+  initialData?: ProfileWithMembers;
+  mode?: "create" | "edit";
 }
 
 export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfileFormProps>(
-  ({ onSuccess, onSubmittingChange }, ref) => {
+  ({ onSuccess, onSubmittingChange, initialData, mode = "create" }, ref) => {
     const [customTagInput, setCustomTagInput] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -74,21 +76,44 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
       onSubmittingChange?.(isSubmitting);
     }, [isSubmitting, onSubmittingChange]);
 
+    // Prepare default values based on initialData or defaults
+    const getDefaultValues = (): SimpleProfileFormData => {
+      if (initialData) {
+        return {
+          profileType: initialData.type === "individual" ? "Individual" : "Group",
+          name: initialData.name,
+          relationshipType: initialData.relationship_type,
+          formality: initialData.tone_preferences.formality,
+          friendliness: initialData.tone_preferences.friendliness,
+          preferredLength: initialData.tone_preferences.preferredLength,
+          emojiUsage: initialData.tone_preferences.emojiUsage,
+          tags: initialData.tone_preferences.tags || [],
+          notes: initialData.notes || "",
+          groupMembers: initialData.members?.map((m: { name: string; role?: string | null; email?: string | null }) => ({
+            name: m.name,
+            role: m.role || "",
+            email: m.email || "",
+          })) || [],
+        };
+      }
+      return {
+        profileType: "Individual",
+        name: "",
+        relationshipType: INDIVIDUAL_RELATIONSHIP_TYPES[0],
+        formality: "Neutral",
+        friendliness: "Neutral",
+        preferredLength: "Medium",
+        emojiUsage: "Minimal",
+        tags: [],
+        notes: "",
+        groupMembers: [],
+      };
+    };
+
     const form = useForm<SimpleProfileFormData>({
-    resolver: zodResolver(simpleProfileSchema),
-    defaultValues: {
-      profileType: "Individual",
-      name: "",
-      relationshipType: INDIVIDUAL_RELATIONSHIP_TYPES[0],
-      formality: "Neutral",
-      friendliness: "Neutral",
-      preferredLength: "Medium",
-      emojiUsage: "Minimal",
-      tags: [],
-      notes: "",
-      groupMembers: [],
-    },
-  });
+      resolver: zodResolver(simpleProfileSchema),
+      defaultValues: getDefaultValues(),
+    });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -139,25 +164,37 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
       // Note: groupMembers will be saved separately to profile_members table
       const groupMembers = data.groupMembers || [];
 
-      // Call the server action to create the profile
-      const result = await createProfile(profileData, groupMembers);
+      // Call the appropriate server action based on mode
+      let result;
+      if (mode === "edit" && initialData) {
+        result = await updateProfile(initialData.id, profileData, groupMembers);
+        if (result.success) {
+          toast.success("Profile updated successfully!", {
+            description: `"${profileData.name}" has been updated.`,
+          });
+        }
+      } else {
+        result = await createProfile(profileData, groupMembers);
+        if (result.success) {
+          toast.success("Profile created successfully!", {
+            description: `"${profileData.name}" has been added to your profiles.`,
+          });
+          form.reset();
+        }
+      }
       
       if (result.success) {
-        toast.success("Profile created successfully!", {
-          description: `"${profileData.name}" has been added to your profiles.`,
-        });
-        form.reset();
         onSuccess?.();
       } else {
-        throw new Error(result.message || "Failed to create profile");
+        throw new Error(result.message || `Failed to ${mode === "edit" ? "update" : "create"} profile`);
       }
     } catch (error) {
-      console.error("Error creating profile:", error);
+      console.error(`Error ${mode === "edit" ? "updating" : "creating"} profile:`, error);
       const errorMessage =
         error instanceof Error
           ? error.message
           : "An unexpected error occurred. Please try again.";
-      toast.error("Failed to create profile", {
+      toast.error(`Failed to ${mode === "edit" ? "update" : "create"} profile`, {
         description: errorMessage,
       });
     } finally {

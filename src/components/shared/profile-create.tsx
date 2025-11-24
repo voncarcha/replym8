@@ -15,12 +15,12 @@ import {
 } from "@/components/ui/drawer";
 import { SimpleProfileForm, type SimpleProfileFormHandle } from "./simple-profile-form";
 
-interface AddProfileProps {
+interface ProfileCreateProps {
   onSuccess?: () => void;
   trigger?: React.ReactNode;
 }
 
-export function AddProfile({ onSuccess, trigger }: AddProfileProps) {
+export function ProfileCreate({ onSuccess, trigger }: ProfileCreateProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,8 +61,8 @@ export function AddProfile({ onSuccess, trigger }: AddProfileProps) {
     <Drawer open={open} onOpenChange={setOpen} direction="right">
       <DrawerTrigger asChild>
         {trigger || (
-          <Button className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 text-white dark:text-slate-950 text-sm font-medium tracking-tight px-3 py-1.5 hover:bg-sky-400 h-auto">
-            Add Profile
+          <Button className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 text-white text-sm font-medium tracking-tight px-3 py-1.5 hover:bg-sky-400 h-auto">
+            Create Profile
           </Button>
         )}
       </DrawerTrigger>

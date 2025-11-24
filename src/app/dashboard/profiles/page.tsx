@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { AddProfile } from "@/components/shared/add-profile";
+import { ProfileCreate } from "@/components/shared/profile-create";
 import { ProfileFilters } from "@/components/shared/profile-filters";
 import { getProfiles } from "@/app/actions/profile";
 
@@ -19,11 +19,11 @@ export default async function ProfilesPage() {
             Personalize replies per person, team, or account.
           </p>
         </div>
-        <AddProfile
+        <ProfileCreate
           trigger={
-            <Button className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 text-white dark:text-slate-950 text-sm font-medium tracking-tight px-3 py-1.5 hover:bg-sky-400 h-auto">
+            <Button className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 text-white text-sm font-medium tracking-tight px-3 py-1.5 hover:bg-sky-400 h-auto">
               <Plus className="h-3.5 w-3.5" />
-              Add Profile
+              Create Profile
             </Button>
           }
         />

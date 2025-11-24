@@ -26,8 +26,8 @@ export function PricingSection() {
 
         <div className="grid gap-4 sm:gap-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
           {/* Main plan */}
-          <div className="relative rounded-2xl border border-sky-500/50 bg-gradient-to-br from-background via-background to-card/90 p-4 sm:p-6 shadow-lg shadow-sky-900/60 dark:shadow-sky-900/60">
-            <div className="absolute -top-3 right-4 inline-flex items-center gap-1 rounded-full bg-sky-500 text-white dark:text-slate-950 text-[0.65rem] font-medium tracking-tight px-2.5 py-0.5">
+          <div className="relative rounded-2xl border border-sky-500/50 bg-linear-to-br from-background via-background to-card/90 p-4 sm:p-6 shadow-lg shadow-sky-900/60 dark:shadow-sky-900/60">
+            <div className="absolute -top-3 right-4 inline-flex items-center gap-1 rounded-full bg-sky-500 text-white text-[0.65rem] font-medium tracking-tight px-2.5 py-0.5">
               Most popular
             </div>
             <div className="space-y-4">

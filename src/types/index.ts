@@ -39,6 +39,7 @@ export interface Profile {
   tone_preferences: TonePreferences; // JSONB
   relationship_type: string;
   created_at: Date;
+  updated_at?: Date | null;
 }
 
 export interface CreateProfileInput {

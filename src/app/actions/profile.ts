@@ -251,6 +251,78 @@ export async function getProfiles(): Promise<ProfileWithMembers[]> {
   }
 }
 
+export async function getProfileById(profileId: string): Promise<ProfileWithMembers | null> {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  let supabase;
+  try {
+    supabase = createAdminClient();
+  } catch (error) {
+    console.error("Failed to create admin client:", error);
+    throw new Error(
+      "Server configuration error. Please check SUPABASE_SERVICE_ROLE_KEY environment variable."
+    );
+  }
+
+  try {
+    // Fetch the profile
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", profileId)
+      .eq("user_id", userId)
+      .single();
+
+    if (profileError) {
+      // PGRST116 means no rows returned (profile not found)
+      // This is expected when a profile has been deleted or doesn't exist
+      if (profileError.code === "PGRST116") {
+        return null;
+      }
+      // Only log unexpected errors with meaningful information
+      if (profileError.message || profileError.code) {
+        console.error("Error fetching profile:", profileError);
+        throw new Error(`Failed to fetch profile: ${profileError.message || profileError.code}`);
+      }
+      // If error object is empty or malformed, just return null
+      return null;
+    }
+
+    if (!profile) {
+      return null;
+    }
+
+    // Fetch members if it's a group profile
+    const { data: members, error: membersError } = await supabase
+      .from("profile_members")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: true });
+
+    if (membersError) {
+      console.warn("Error fetching profile members:", membersError);
+      // Don't fail if members can't be fetched, just continue without them
+    }
+
+    return {
+      ...profile,
+      members: members || [],
+    };
+  } catch (error) {
+    console.error("Error in getProfileById:", error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(
+      `Failed to fetch profile: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
 export async function getProfileCount(): Promise<number> {
   const { userId } = await auth();
 
@@ -281,6 +353,119 @@ export async function getProfileCount(): Promise<number> {
   } catch (error) {
     console.error("Error in getProfileCount:", error);
     return 0;
+  }
+}
+
+export async function updateProfile(
+  profileId: string,
+  profileData: CreateProfileInput,
+  groupMembers?: Array<{ name: string; role?: string; email?: string }>
+): Promise<{ success: boolean; message: string }> {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  let supabase;
+  try {
+    supabase = createAdminClient();
+  } catch (error) {
+    console.error("Failed to create admin client:", error);
+    throw new Error(
+      "Server configuration error. Please check SUPABASE_SERVICE_ROLE_KEY environment variable."
+    );
+  }
+
+  try {
+    // First, verify the profile belongs to the user
+    const { data: existingProfile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, user_id")
+      .eq("id", profileId)
+      .eq("user_id", userId)
+      .single();
+
+    if (profileError || !existingProfile) {
+      throw new Error("Profile not found or unauthorized");
+    }
+
+    // Prepare the update data
+    const updateData = {
+      name: profileData.name,
+      type: profileData.type,
+      relationship_type: profileData.relationship_type,
+      tone_preferences: profileData.tone_preferences,
+      notes: profileData.notes || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Update the profile
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update(updateData)
+      .eq("id", profileId)
+      .eq("user_id", userId);
+
+    if (updateError) {
+      console.error("Error updating profile:", updateError);
+      throw new Error(`Failed to update profile: ${updateError.message}`);
+    }
+
+    // Handle group members if provided
+    if (groupMembers && groupMembers.length > 0) {
+      // Delete existing members
+      const { error: deleteMembersError } = await supabase
+        .from("profile_members")
+        .delete()
+        .eq("profile_id", profileId);
+
+      if (deleteMembersError) {
+        console.warn("Error deleting existing profile members:", deleteMembersError);
+      }
+
+      // Insert new members
+      const membersToInsert = groupMembers.map((member) => ({
+        profile_id: profileId,
+        name: member.name,
+        role: member.role || null,
+        email: member.email || null,
+      }));
+
+      const { error: insertMembersError } = await supabase
+        .from("profile_members")
+        .insert(membersToInsert);
+
+      if (insertMembersError) {
+        console.error("Error inserting profile members:", insertMembersError);
+        throw new Error(`Failed to update profile members: ${insertMembersError.message}`);
+      }
+    } else if (profileData.type === "individual") {
+      // If switching to individual or no members provided, delete all members
+      const { error: deleteMembersError } = await supabase
+        .from("profile_members")
+        .delete()
+        .eq("profile_id", profileId);
+
+      if (deleteMembersError) {
+        console.warn("Error deleting profile members:", deleteMembersError);
+      }
+    }
+
+    // Revalidate the profiles pages
+    revalidatePath("/dashboard/profiles", "page");
+    revalidatePath(`/dashboard/profiles/${profileId}`, "page");
+
+    return {
+      success: true,
+      message: "Profile updated successfully",
+    };
+  } catch (error) {
+    console.error("Error in updateProfile:", error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Failed to update profile");
   }
 }
 
@@ -337,8 +522,9 @@ export async function deleteProfile(profileId: string): Promise<{ success: boole
       throw new Error(`Failed to delete profile: ${deleteError.message}`);
     }
 
-    // Revalidate the profiles page
-    revalidatePath("/dashboard/profiles");
+    // Revalidate the profiles list page only
+    // Don't revalidate the detail page to avoid errors
+    revalidatePath("/dashboard/profiles", "page");
 
     return {
       success: true,

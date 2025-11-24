@@ -15,7 +15,7 @@ export default function ConversationsPage() {
             Upload and manage conversation threads to enrich profiles.
           </p>
         </div>
-        <Button className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 text-white dark:text-slate-950 text-sm font-medium tracking-tight px-3 py-1.5 hover:bg-sky-400 h-auto">
+        <Button className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 text-white text-sm font-medium tracking-tight px-3 py-1.5 hover:bg-sky-400 h-auto">
           <Upload className="h-3.5 w-3.5" />
           Upload Thread
         </Button>

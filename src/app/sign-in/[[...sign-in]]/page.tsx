@@ -37,7 +37,7 @@ export default function SignInPage() {
               socialButtonsBlockButton:
                 "bg-muted border-border text-foreground hover:bg-muted/80",
               formButtonPrimary:
-                "bg-sky-500 hover:bg-sky-600 text-white dark:text-slate-950",
+                "bg-sky-500 hover:bg-sky-600 text-white",
               formFieldLabel: "text-foreground",
               formFieldInput:
                 "bg-background border-border text-foreground focus:border-sky-500",

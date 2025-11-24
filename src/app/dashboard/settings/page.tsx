@@ -67,7 +67,7 @@ Your name"
                 ReplyM8 can optionally append this to generated replies.
               </p>
             </div>
-            <Button className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 text-white dark:text-slate-950 text-sm font-medium px-3 py-1.5 hover:bg-sky-400 h-auto">
+            <Button className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 text-white text-sm font-medium px-3 py-1.5 hover:bg-sky-400 h-auto">
               Save defaults
             </Button>
           </Card>
