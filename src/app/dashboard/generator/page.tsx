@@ -17,6 +17,8 @@ export default function ReplyGeneratorPage() {
   const [composeTo, setComposeTo] = useState("");
   const [composeSubject, setComposeSubject] = useState("");
   const [selectedProfile, setSelectedProfile] = useState("lena");
+  const [generatedReply, setGeneratedReply] = useState("");
+  const [isReplyGenerated, setIsReplyGenerated] = useState(false);
 
   return (
     <>
@@ -130,13 +132,37 @@ export default function ReplyGeneratorPage() {
                   className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-2 min-h-24 focus:outline-none focus:ring-1 focus:ring-primary"
                   placeholder="Paste the message you need to reply to..."
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    // Reset generated reply when message changes
+                    if (isReplyGenerated) {
+                      setIsReplyGenerated(false);
+                      setGeneratedReply("");
+                    }
+                  }}
                 />
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>
                     Tip: include a few lines of previous context for best results.
                   </span>
                   <span>{message.length} / 2,000 chars</span>
+                </div>
+                <div className="flex items-center justify-end pt-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (message.trim()) {
+                        // TODO: Implement actual reply generation logic
+                        setGeneratedReply("Here's a concise update you can send Lena. It highlights the key risks, keeps the tone formal, and makes it easy for her to speak to tradeoffs in the review.");
+                        setIsReplyGenerated(true);
+                      }
+                    }}
+                    disabled={!message.trim()}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-3 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    Generate reply
+                  </Button>
                 </div>
               </Card>
             </>
@@ -368,8 +394,10 @@ export default function ReplyGeneratorPage() {
               </div>
               <div className="rounded-lg border border-border bg-background/80 p-3 min-h-28">
                 <p className="text-sm text-foreground">
-                  {message
-                    ? "Here's a concise update you can send Lena. It highlights the key risks, keeps the tone formal, and makes it easy for her to speak to tradeoffs in the review."
+                  {isReplyGenerated
+                    ? generatedReply
+                    : message
+                    ? "Click 'Generate reply' to create a response..."
                     : "Generated reply will appear here after you paste a message..."}
                 </p>
               </div>
@@ -385,7 +413,15 @@ export default function ReplyGeneratorPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto"
+                    onClick={() => {
+                      if (message.trim()) {
+                        // TODO: Implement actual reply generation logic
+                        setGeneratedReply("Here's a concise update you can send Lena. It highlights the key risks, keeps the tone formal, and makes it easy for her to speak to tradeoffs in the review.");
+                        setIsReplyGenerated(true);
+                      }
+                    }}
+                    disabled={!message.trim() || !isReplyGenerated}
+                    className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                     Regenerate
