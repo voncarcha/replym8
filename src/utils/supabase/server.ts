@@ -1,9 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+/**
+ * Creates a Supabase client for server-side usage with SSR support.
+ * Uses the publishable key and handles cookies for session management.
+ */
 export async function createClient() {
   const cookieStore = await cookies();
 
@@ -29,5 +35,25 @@ export async function createClient() {
       },
     }
   );
+}
+
+/**
+ * Creates a Supabase admin client using the service role key.
+ * This bypasses RLS and should only be used in server actions/server components.
+ * Use this when you need to perform operations that require elevated permissions.
+ */
+export function createAdminClient() {
+  if (!supabaseServiceRoleKey) {
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY is not set. This is required for server-side operations."
+    );
+  }
+
+  return createSupabaseClient(supabaseUrl!, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
 

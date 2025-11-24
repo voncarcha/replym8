@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { useThemeStore } from "@/lib/store";
+import { Toaster } from "sonner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const theme = useThemeStore((state) => state.theme);
@@ -23,6 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+      <Toaster position="top-right" richColors />
     </ClerkProvider>
   );
 }

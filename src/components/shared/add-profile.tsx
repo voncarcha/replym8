@@ -26,8 +26,8 @@ export function AddProfile({ onSuccess, trigger }: AddProfileProps) {
   const handleSuccess = () => {
     setIsSubmitting(false);
     formRef.current?.resetSubmitting();
-    setOpen(false);
-    onSuccess?.();
+      setOpen(false);
+      onSuccess?.();
   };
 
   const handleCancel = () => {
@@ -74,18 +74,18 @@ export function AddProfile({ onSuccess, trigger }: AddProfileProps) {
             onSuccess={handleSuccess}
             onCancel={handleCancel}
             onSubmittingChange={setIsSubmitting}
-          />
-        </div>
+              />
+            </div>
         <DrawerFooter className="border-t shrink-0 gap-2">
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
             <Button
               type="button"
               onClick={handleSubmit}
@@ -93,9 +93,9 @@ export function AddProfile({ onSuccess, trigger }: AddProfileProps) {
               className="flex-1"
             >
               {isSubmitting ? "Saving..." : "Save Profile"}
-            </Button>
-          </div>
-        </DrawerFooter>
+                </Button>
+              </div>
+            </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

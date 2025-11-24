@@ -44,15 +44,17 @@ export const simpleProfileSchema = z
     preferredLength: z.enum(["Short", "Medium", "Long"]),
     emojiUsage: z.enum(["None", "Minimal", "Allowed"]),
     tags: z.array(z.string()),
-    groupMembers: z
-      .array(
-        z.object({
-          name: z.string().min(1, "Name is required"),
-          role: z.string().min(1, "Role is required"),
-          email: z.union([z.string().email("Invalid email address"), z.literal("")]),
-        })
-      )
-      .optional(),
+  groupMembers: z
+    .array(
+      z.object({
+        name: z.string().min(1, "Name is required"),
+        role: z.string().optional(),
+        email: z
+          .union([z.string().email("Invalid email address"), z.literal("")])
+          .optional(),
+      })
+    )
+    .optional(),
   })
   .refine(
     (data) => {

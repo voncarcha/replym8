@@ -42,9 +42,9 @@ export function GroupMember({ control, index, onRemove }: GroupMemberProps) {
           name={`groupMembers.${index}.role`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Role</FormLabel>
+              <FormLabel>Role (optional)</FormLabel>
               <FormControl>
-                <Input placeholder="Enter role" {...field} />
+                <Input placeholder="Enter role" {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -55,9 +55,14 @@ export function GroupMember({ control, index, onRemove }: GroupMemberProps) {
           name={`groupMembers.${index}.email`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email (optional)</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="Enter email" {...field} />
+                <Input
+                  type="email"
+                  placeholder="Enter email"
+                  {...field}
+                  value={field.value || ""}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

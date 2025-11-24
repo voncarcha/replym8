@@ -30,6 +30,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import { toast } from "sonner";
 import {
   simpleProfileSchema,
   SimpleProfileFormData,
@@ -38,6 +39,7 @@ import {
 } from "./simple-profile-schema";
 import { GroupMember } from "./group-member";
 import { CreateProfileInput } from "@/types";
+import { createProfile } from "@/app/actions/profile";
 
 const SUGGESTED_TAGS = [
   "Short replies",
@@ -135,20 +137,27 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
       // Note: groupMembers will be saved separately to profile_members table
       const groupMembers = data.groupMembers || [];
 
-      console.log("Profile data to save:", profileData);
-      console.log("Group members to save:", groupMembers);
+      // Call the server action to create the profile
+      const result = await createProfile(profileData, groupMembers);
       
-      // TODO: Implement API call to create profile
-      // await createProfile(profileData);
-      
-      // For now, simulate a successful save
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      
-      form.reset();
-      onSuccess?.();
+      if (result.success) {
+        toast.success("Profile created successfully!", {
+          description: `"${profileData.name}" has been added to your profiles.`,
+        });
+        form.reset();
+        onSuccess?.();
+      } else {
+        throw new Error(result.message || "Failed to create profile");
+      }
     } catch (error) {
       console.error("Error creating profile:", error);
-      // You could add a toast notification here
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred. Please try again.";
+      toast.error("Failed to create profile", {
+        description: errorMessage,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -157,6 +166,9 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
   const onError = (errors: unknown) => {
     console.error("Form validation errors:", errors);
     setIsSubmitting(false);
+    toast.error("Form validation failed", {
+      description: "Please check the form fields and try again.",
+    });
   };
 
   const handleTagToggle = (tag: string) => {
@@ -516,7 +528,7 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => append({ name: "", role: "", email: "" })}
+                onClick={() => append({ name: "", role: undefined, email: undefined })}
               >
                 Add Member
               </Button>
