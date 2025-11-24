@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -42,15 +43,14 @@ import { CreateProfileInput } from "@/types";
 import { createProfile } from "@/app/actions/profile";
 
 const SUGGESTED_TAGS = [
-  "Short replies",
-  "No emojis",
   "Bullet points",
   "Detailed",
   "TL;DR preferred",
   "Data-first",
   "Weekly status",
   "Strictly professional",
-  "Friendly",
+  "Empathetic",
+  "Step-by-step"
 ];
 
 export interface SimpleProfileFormHandle {
@@ -85,6 +85,7 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
       preferredLength: "Medium",
       emojiUsage: "Minimal",
       tags: [],
+      notes: "",
       groupMembers: [],
     },
   });
@@ -132,6 +133,7 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
           emojiUsage: data.emojiUsage,
           tags: data.tags,
         },
+        notes: data.notes || null,
       };
 
       // Note: groupMembers will be saved separately to profile_members table
@@ -293,7 +295,7 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
         {/* Basic Tone Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Basic Tone</CardTitle>
+            <CardTitle>Tone Preferences</CardTitle>
             <CardDescription>
               Set the tone preferences for communication.
             </CardDescription>
@@ -504,6 +506,34 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
                 ))}
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Notes Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Notes</CardTitle>
+            <CardDescription>
+              Add any additional notes or context about this profile.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter any additional notes or context..."
+                      className="min-h-[100px] resize-y"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 

@@ -34,7 +34,7 @@ export interface Profile {
   id: string; // UUID
   user_id: string; // text
   name: string;
-  description: string | null;
+  notes: string | null;
   type: ProfileType;
   tone_preferences: TonePreferences; // JSONB
   relationship_type: string;
@@ -46,7 +46,7 @@ export interface CreateProfileInput {
   type: ProfileType;
   relationship_type: string;
   tone_preferences: TonePreferences;
-  description?: string | null;
+  notes?: string | null;
 }
 
 export interface ProfileMember {

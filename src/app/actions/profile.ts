@@ -1,8 +1,9 @@
 "use server";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/utils/supabase/server";
-import { CreateProfileInput } from "@/types";
+import { CreateProfileInput, Profile, ProfileMember } from "@/types";
 
 export async function createProfile(
   profileData: CreateProfileInput,
@@ -98,7 +99,7 @@ export async function createProfile(
       type: profileData.type,
       relationship_type: profileData.relationship_type,
       tone_preferences: profileData.tone_preferences,
-      description: profileData.description || null,
+      notes: profileData.notes || null,
     };
 
     console.log("Attempting to insert profile:", JSON.stringify(insertData, null, 2));
@@ -154,6 +155,9 @@ export async function createProfile(
       }
     }
 
+    // Revalidate the profiles page to show the new profile
+    revalidatePath("/dashboard/profiles");
+
     return {
       success: true,
       message: "Profile created successfully",
@@ -171,6 +175,112 @@ export async function createProfile(
     throw new Error(
       `Failed to create profile: ${error instanceof Error ? error.message : String(error)}`
     );
+  }
+}
+
+export interface ProfileWithMembers extends Profile {
+  members?: ProfileMember[];
+}
+
+export async function getProfiles(): Promise<ProfileWithMembers[]> {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  let supabase;
+  try {
+    supabase = createAdminClient();
+  } catch (error) {
+    console.error("Failed to create admin client:", error);
+    throw new Error(
+      "Server configuration error. Please check SUPABASE_SERVICE_ROLE_KEY environment variable."
+    );
+  }
+
+  try {
+    // Fetch profiles for the current user
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
+    }
+
+    if (!profiles || profiles.length === 0) {
+      return [];
+    }
+
+    // Fetch members for all profiles (if any are groups)
+    const profileIds = profiles.map((p) => p.id);
+    const { data: members, error: membersError } = await supabase
+      .from("profile_members")
+      .select("*")
+      .in("profile_id", profileIds)
+      .order("created_at", { ascending: true });
+
+    if (membersError) {
+      console.warn("Error fetching profile members:", membersError);
+      // Don't fail if members can't be fetched, just continue without them
+    }
+
+    // Map members to their profiles
+    const profilesWithMembers: ProfileWithMembers[] = profiles.map((profile) => {
+      const profileMembers =
+        members?.filter((m) => m.profile_id === profile.id) || [];
+      return {
+        ...profile,
+        members: profileMembers,
+      };
+    });
+
+    return profilesWithMembers;
+  } catch (error) {
+    console.error("Error in getProfiles:", error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(
+      `Failed to fetch profiles: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+export async function getProfileCount(): Promise<number> {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return 0;
+  }
+
+  let supabase;
+  try {
+    supabase = createAdminClient();
+  } catch (error) {
+    console.error("Failed to create admin client:", error);
+    return 0;
+  }
+
+  try {
+    const { count, error: countError } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    if (countError) {
+      console.error("Error fetching profile count:", countError);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error) {
+    console.error("Error in getProfileCount:", error);
+    return 0;
   }
 }
 

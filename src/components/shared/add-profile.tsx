@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -19,6 +20,7 @@ interface AddProfileProps {
 }
 
 export function AddProfile({ onSuccess, trigger }: AddProfileProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formRef = useRef<SimpleProfileFormHandle>(null);
@@ -26,8 +28,14 @@ export function AddProfile({ onSuccess, trigger }: AddProfileProps) {
   const handleSuccess = () => {
     setIsSubmitting(false);
     formRef.current?.resetSubmitting();
-      setOpen(false);
-      onSuccess?.();
+    setOpen(false);
+    // Dispatch custom event to notify other components
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("profileCreated"));
+    }
+    // Refresh the page to show the new profile
+    router.refresh();
+    onSuccess?.();
   };
 
   const handleCancel = () => {

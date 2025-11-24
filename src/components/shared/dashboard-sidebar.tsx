@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Home,
   Folder,
@@ -18,6 +18,7 @@ import { UserButton } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useThemeStore } from "@/lib/store";
+import { getProfileCount } from "@/app/actions/profile";
 
 const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -30,8 +31,29 @@ const navItems = [
 export function DashboardSidebar() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profileCount, setProfileCount] = useState<number | null>(null);
   const userButtonRef = useRef<HTMLDivElement>(null);
   const theme = useThemeStore((state) => state.theme);
+
+  const refreshProfileCount = () => {
+    getProfileCount().then(setProfileCount).catch(() => setProfileCount(0));
+  };
+
+  useEffect(() => {
+    // Fetch profile count on mount
+    refreshProfileCount();
+
+    // Listen for profile creation events
+    const handleProfileCreated = () => {
+      refreshProfileCount();
+    };
+
+    window.addEventListener("profileCreated", handleProfileCreated);
+
+    return () => {
+      window.removeEventListener("profileCreated", handleProfileCreated);
+    };
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -120,7 +142,9 @@ export function DashboardSidebar() {
                 <span className="text-[0.75rem] text-muted-foreground">Today</span>
               )}
               {item.href === "/dashboard/profiles" && (
-                <span className="text-[0.75rem] text-muted-foreground">12</span>
+                <span className="text-[0.75rem] text-muted-foreground">
+                  {profileCount !== null ? profileCount : "..."}
+                </span>
               )}
               {item.href === "/dashboard/conversations" && (
                 <span className="text-[0.75rem] text-muted-foreground">+ Upload</span>

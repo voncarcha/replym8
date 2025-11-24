@@ -5,7 +5,7 @@ const INDIVIDUAL_RELATIONSHIP_TYPES = [
   "Lead",
   "Manager",
   "Coworker",
-  "Direct Report",
+  "Boss",
   "Friend",
   "Family",
   "Service Provider",
@@ -27,11 +27,11 @@ const GROUP_RELATIONSHIP_TYPES = [
   "School Organization",
   "Friend Group",
   "Family Group",
-  "Social Circle",
   "Community Group",
   "Hobby Group",
   "Volunteer Group",
   "Household",
+  "Other"
 ] as const;
 
 export const simpleProfileSchema = z
@@ -44,6 +44,7 @@ export const simpleProfileSchema = z
     preferredLength: z.enum(["Short", "Medium", "Long"]),
     emojiUsage: z.enum(["None", "Minimal", "Allowed"]),
     tags: z.array(z.string()),
+    notes: z.string().optional(),
   groupMembers: z
     .array(
       z.object({
