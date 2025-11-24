@@ -59,22 +59,22 @@ export function ProfileDetails({ profile }: ProfileDetailsProps) {
             <Label className="text-sm text-muted-foreground">Tone Preferences</Label>
             <div className="flex flex-wrap gap-2">
               {tonePrefs.formality && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs text-muted-foreground">
                   Formality: {tonePrefs.formality}
                 </Badge>
               )}
               {tonePrefs.friendliness && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs text-muted-foreground">
                   Friendliness: {tonePrefs.friendliness}
                 </Badge>
               )}
               {tonePrefs.preferredLength && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs text-muted-foreground">
                   Length: {tonePrefs.preferredLength}
                 </Badge>
               )}
               {tonePrefs.emojiUsage && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs text-muted-foreground">
                   Emoji: {tonePrefs.emojiUsage}
                 </Badge>
               )}
@@ -87,7 +87,7 @@ export function ProfileDetails({ profile }: ProfileDetailsProps) {
               <Label className="text-sm text-muted-foreground">Tags</Label>
               <div className="flex flex-wrap gap-1.5">
                 {tonePrefs.tags.map((tag, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-xs">
+                  <Badge key={idx} variant="secondary" className="text-xs text-muted-foreground">
                     {tag}
                   </Badge>
                 ))}

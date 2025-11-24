@@ -29,6 +29,27 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const theme = localStorage.getItem('theme-storage');
+                  if (theme) {
+                    const parsed = JSON.parse(theme);
+                    const themeValue = parsed?.state?.theme || 'dark';
+                    document.documentElement.classList.remove('light', 'dark');
+                    document.documentElement.classList.add(themeValue);
+                  } else {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {
+                  document.documentElement.classList.add('dark');
+                }
+              })();
+            `,
+          }}
+        />
         <Providers>{children}</Providers>
       </body>
     </html>
