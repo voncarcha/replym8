@@ -1,0 +1,27 @@
+---
+description: Supabase database patterns and server actions
+alwaysApply: false
+---
+
+# Database & Server Actions
+
+## Supabase Setup
+
+- Use Supabase with SSR via `createServerClient` from `@supabase/ssr`.
+- Create Supabase clients in `src/utils/supabase/server.ts` for server-side usage.
+- Use TypeScript interfaces from `src/types/index.ts` for database types.
+
+## Server Actions
+
+- Use `"use server"` directive for all server actions.
+- Place server actions in `src/app/actions/` directory.
+- Always validate user authentication in server actions before database operations.
+
+## State Management
+
+- Use React state sparingly; prefer server components unless client-side interactivity is needed.
+- For shared global state, use Zustand with persistence middleware when needed.
+- Store Zustand stores in `src/lib/store.ts`.
+- Use Zustand persist middleware with localStorage for client-side persistence.
+- For form state, use React Hook Form with Zod validation.
+- For data fetching, prefer server actions or server components over client-side fetching.

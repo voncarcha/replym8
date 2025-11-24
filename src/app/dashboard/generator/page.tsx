@@ -2,75 +2,281 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Copy, RefreshCw, Info } from "lucide-react";
+import { Copy, RefreshCw, Info, Send, Plus, FolderOpen, List } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
+
+type Mode = "reply" | "compose";
+type Length = "short" | "medium" | "long";
 
 export default function ReplyGeneratorPage() {
+  const [mode, setMode] = useState<Mode>("reply");
+  const [length, setLength] = useState<Length>("short");
   const [message, setMessage] = useState("");
+  const [composeMessage, setComposeMessage] = useState("");
+  const [composeTo, setComposeTo] = useState("");
+  const [composeSubject, setComposeSubject] = useState("");
   const [selectedProfile, setSelectedProfile] = useState("lena");
 
   return (
     <>
       {/* Header */}
-      <div className="px-4 sm:px-5 py-3 flex items-center justify-between border-b border-border">
+      <div className="px-4 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-border">
         <div>
-          <h3 className="text-base sm:text-xl font-medium tracking-tight text-foreground">
+          <h3 className="text-sm sm:text-base font-medium tracking-tight text-foreground">
             Reply generator
           </h3>
-          <p className="text-sm sm:text-sm text-muted-foreground">
-            Paste a message, choose a profile, and fine-tune your reply.
+          <p className="text-[0.7rem] sm:text-xs text-muted-foreground">
+            Paste a message, compose from scratch, choose a profile, and fine-tune your reply.
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 text-sm text-foreground">
-          <span>Length</span>
-          <div className="inline-flex items-center rounded-full border border-border bg-card overflow-hidden">
-            <button className="px-2 py-1 text-sm bg-primary text-primary-foreground font-medium">
-              Short
-            </button>
-            <button className="px-2 py-1 text-sm text-muted-foreground hover:bg-muted">
-              Medium
-            </button>
-            <button className="px-2 py-1 text-sm text-muted-foreground hover:bg-muted">
-              Long
-            </button>
+        <div className="flex flex-wrap items-center gap-5">
+          <div className="inline-flex items-center gap-2 text-[0.7rem] text-muted-foreground">
+            <span>Mode</span>
+            <div className="inline-flex items-center rounded-full border border-border bg-card overflow-hidden">
+              <button
+                onClick={() => setMode("reply")}
+                className={cn(
+                  "px-2 py-1 text-[0.7rem] font-medium transition-colors",
+                  mode === "reply"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Reply
+              </button>
+              <button
+                onClick={() => setMode("compose")}
+                className={cn(
+                  "px-2 py-1 text-[0.7rem] font-medium transition-colors",
+                  mode === "compose"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Compose
+              </button>
+            </div>
+          </div>
+          <div className="inline-flex items-center gap-2 text-[0.7rem] text-muted-foreground">
+            <span>Length</span>
+            <div className="inline-flex items-center rounded-full border border-border bg-card overflow-hidden">
+              <button
+                onClick={() => setLength("short")}
+                className={cn(
+                  "px-2 py-1 text-[0.7rem] font-medium transition-colors",
+                  length === "short"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Short
+              </button>
+              <button
+                onClick={() => setLength("medium")}
+                className={cn(
+                  "px-2 py-1 text-[0.7rem] font-medium transition-colors",
+                  length === "medium"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Medium
+              </button>
+              <button
+                onClick={() => setLength("long")}
+                className={cn(
+                  "px-2 py-1 text-[0.7rem] font-medium transition-colors",
+                  length === "long"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                Long
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="px-4 sm:px-5 pb-4 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.1fr)] overflow-y-auto pt-4">
+      <div
+        className={cn(
+          "px-4 sm:px-5 pb-4 grid gap-4 overflow-y-auto pt-4",
+          mode === "reply"
+            ? "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.1fr)]"
+            : "lg:grid-cols-1"
+        )}
+      >
         {/* Left: input */}
         <div className="space-y-3">
-          <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">
-                Incoming message
-              </label>
-              <div className="inline-flex items-center gap-2 text-sm text-foreground">
-                <span className="rounded-full bg-muted px-2 py-0.5">
-                  Email
-                </span>
-                <span className="rounded-full border border-border bg-card px-2 py-0.5">
-                  Chat
-                </span>
+          {mode === "reply" ? (
+            <>
+              <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground">
+                    Incoming message
+                  </label>
+                  <div className="inline-flex items-center gap-2 text-sm text-foreground">
+                    <span className="rounded-full bg-muted px-2 py-0.5">
+                      Email
+                    </span>
+                    <span className="rounded-full border border-border bg-card px-2 py-0.5">
+                      Chat
+                    </span>
+                  </div>
+                </div>
+                <textarea
+                  className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-2 min-h-24 focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="Paste the message you need to reply to..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>
+                    Tip: include a few lines of previous context for best results.
+                  </span>
+                  <span>{message.length} / 2,000 chars</span>
+                </div>
+              </Card>
+            </>
+          ) : (
+            <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Compose new message
+                  </label>
+                  <span className="text-sm text-muted-foreground">
+                    Start from scratch with AI help.
+                  </span>
+                </div>
+                <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="rounded-full border border-border bg-card px-2 py-0.5">
+                    Email
+                  </span>
+                  <span className="rounded-full border border-border bg-card px-2 py-0.5">
+                    DM
+                  </span>
+                </div>
               </div>
-            </div>
-            <textarea
-              className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-2 min-h-24 focus:outline-none focus:ring-1 focus:ring-sky-500"
-              placeholder="Paste the message you need to reply to..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>
-                Tip: include a few lines of previous context for best results.
-              </span>
-              <span>{message.length} / 2,000 chars</span>
-            </div>
-          </Card>
+              {/* To / Subject row */}
+              <div className="space-y-2">
+                <div className="grid gap-2 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1.1fr)]">
+                  <div>
+                    <label className="block text-muted-foreground text-sm">
+                      To
+                    </label>
+                    <div className="mt-1 flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-1.5">
+                      <input
+                        type="text"
+                        className="flex-1 bg-transparent text-sm text-foreground focus:outline-none placeholder:text-muted-foreground"
+                        placeholder="lena@company.com or pick from profiles"
+                        value={composeTo}
+                        onChange={(e) => setComposeTo(e.target.value)}
+                      />
+                      <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card text-sm text-foreground px-1.5 py-0.5 hover:bg-muted transition-colors">
+                        <FolderOpen className="h-3 w-3" />
+                        Profiles
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-muted-foreground text-sm">
+                      Subject
+                    </label>
+                    <input
+                      className="mt-1 w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="Roadmap risks for tomorrow's exec review"
+                      value={composeSubject}
+                      onChange={(e) => setComposeSubject(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              {/* Compose body with toolbar */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Message body
+                  </span>
+                  <div className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                    <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 hover:bg-muted transition-colors">
+                      <List className="h-3 w-3" />
+                      Outline
+                    </button>
+                    <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 hover:bg-muted transition-colors">
+                      <Plus className="h-3 w-3" />
+                      Add points
+                    </button>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border bg-card/80">
+                  {/* Tiny toolbar */}
+                  <div className="flex items-center justify-between border-b border-border px-2.5 py-1.5">
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors">
+                        <span className="text-sm font-medium">B</span>
+                      </button>
+                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors">
+                        <span className="text-sm font-medium">I</span>
+                      </button>
+                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors">
+                        <span className="text-sm font-medium">•</span>
+                      </button>
+                    </div>
+                    <div className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                      <List className="h-3 w-3" />
+                      <span>Plain</span>
+                    </div>
+                  </div>
+                  <textarea
+                    className="w-full rounded-b-lg bg-transparent text-sm text-foreground px-2.5 py-2 min-h-24 focus:outline-none focus:ring-0"
+                    placeholder="Draft what you want to say, or leave a rough idea and let ReplyM8 tighten it up."
+                    value={composeMessage}
+                    onChange={(e) => setComposeMessage(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>
+                    Hint: describe intent (status update, ask, follow-up) for
+                    sharper drafts.
+                  </span>
+                  <span>{composeMessage.length} / 2,000 chars</span>
+                </div>
+              </div>
+              {/* Compose actions */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex gap-1.5">
+                  <Button
+                    size="sm"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-3 py-1.5 hover:bg-primary/90 h-auto"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    Generate message
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-3 py-1.5 hover:bg-muted h-auto"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Improve draft
+                  </Button>
+                </div>
+                <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    Compose mode ready
+                  </span>
+                </div>
+              </div>
+            </Card>
+          )}
 
-          {/* Conversation upload drawer */}
-          <Card className="rounded-xl border-dashed border-border bg-card/60 p-3 sm:p-4 space-y-2">
+          {/* Conversation upload drawer - only show in reply mode */}
+          {mode === "reply" && (
+            <Card className="rounded-xl border-dashed border-border bg-card/60 p-3 sm:p-4 space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <svg
@@ -106,105 +312,108 @@ export default function ReplyGeneratorPage() {
               </div>
             </div>
           </Card>
+          )}
         </div>
 
-        {/* Right: profile-select + output */}
-        <div className="space-y-3">
-          <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">
-                Recipient profile
-              </label>
-              <Button
-                variant="outline"
-                className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto"
-              >
-                Manage profiles
-              </Button>
-            </div>
-            <select
-              className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-sky-500"
-              value={selectedProfile}
-              onChange={(e) => setSelectedProfile(e.target.value)}
-            >
-              <option value="lena">Lena · Product Lead (Boss)</option>
-              <option value="acme">ACME · Exec team (Client group)</option>
-              <option value="alex">Alex · Friend</option>
-            </select>
-            <div className="flex flex-wrap gap-1.5 text-[0.8125rem] text-foreground">
-              <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
-                Formal
-              </span>
-              <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
-                Short replies
-              </span>
-              <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
-                No emojis
-              </span>
-            </div>
-          </Card>
-
-          <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">
-                Generated reply
-              </label>
-              <div className="inline-flex items-center gap-1 text-sm text-foreground">
-                <span>Tone</span>
-                <select className="rounded-md border border-border bg-background text-sm text-foreground px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-sky-500">
-                  <option>Match profile</option>
-                  <option>Softer</option>
-                  <option>More direct</option>
-                </select>
-              </div>
-            </div>
-            <div className="rounded-lg border border-border bg-background/80 p-3 min-h-28">
-              <p className="text-sm text-foreground">
-                {message
-                  ? "Here's a concise update you can send Lena. It highlights the key risks, keeps the tone formal, and makes it easy for her to speak to tradeoffs in the review."
-                  : "Generated reply will appear here after you paste a message..."}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 justify-between items-center">
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-2.5 py-1.5 hover:bg-primary/90 h-auto"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                  Copy
-                </Button>
+        {/* Right: profile-select + output - only show in reply mode */}
+        {mode === "reply" && (
+          <div className="space-y-3">
+            <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground">
+                  Recipient profile
+                </label>
                 <Button
                   variant="outline"
-                  size="sm"
                   className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto"
                 >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  Regenerate
+                  Manage profiles
                 </Button>
               </div>
-              <div className="inline-flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
-                <span className="inline-flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  Ready to send
+              <select
+                className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                value={selectedProfile}
+                onChange={(e) => setSelectedProfile(e.target.value)}
+              >
+                <option value="lena">Lena · Product Lead (Boss)</option>
+                <option value="acme">ACME · Exec team (Client group)</option>
+                <option value="alex">Alex · Friend</option>
+              </select>
+              <div className="flex flex-wrap gap-1.5 text-[0.8125rem] text-foreground">
+                <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
+                  Formal
                 </span>
-                <button className="underline underline-offset-2 hover:text-foreground">
-                  Improve opening
-                </button>
+                <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
+                  Short replies
+                </span>
+                <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
+                  No emojis
+                </span>
               </div>
-            </div>
-          </Card>
+            </Card>
 
-          {/* Small insight footer */}
-          <Card className="rounded-xl border-border bg-card/70 p-3 flex items-start gap-2 text-sm text-muted-foreground">
-            <Info className="mt-0.5 h-3.5 w-3.5 text-sky-400 shrink-0" />
-            <p>
-              ReplyM8 keeps this reply aligned with Lena&apos;s profile and
-              similar past threads. You can still tweak tone or length before
-              copying.
-            </p>
-          </Card>
-        </div>
+            <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground">
+                  Generated reply
+                </label>
+                <div className="inline-flex items-center gap-1 text-sm text-foreground">
+                  <span>Tone</span>
+                  <select className="rounded-md border border-border bg-background text-sm text-foreground px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary">
+                    <option>Match profile</option>
+                    <option>Softer</option>
+                    <option>More direct</option>
+                  </select>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-background/80 p-3 min-h-28">
+                <p className="text-sm text-foreground">
+                  {message
+                    ? "Here's a concise update you can send Lena. It highlights the key risks, keeps the tone formal, and makes it easy for her to speak to tradeoffs in the review."
+                    : "Generated reply will appear here after you paste a message..."}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-between items-center">
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-2.5 py-1.5 hover:bg-primary/90 h-auto"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Regenerate
+                  </Button>
+                </div>
+                <div className="inline-flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    Ready to send
+                  </span>
+                  <button className="underline underline-offset-2 hover:text-foreground">
+                    Improve opening
+                  </button>
+                </div>
+              </div>
+            </Card>
+
+            {/* Small insight footer */}
+            <Card className="rounded-xl border-border bg-card/70 p-3 flex items-start gap-2 text-sm text-muted-foreground">
+              <Info className="mt-0.5 h-3.5 w-3.5 text-sky-400 shrink-0" />
+              <p>
+                ReplyM8 keeps this reply aligned with Lena&apos;s profile and
+                similar past threads. You can still tweak tone or length before
+                copying.
+              </p>
+            </Card>
+          </div>
+        )}
       </div>
     </>
   );

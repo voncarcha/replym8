@@ -1,0 +1,29 @@
+---
+description: TailwindCSS styling standards and UI/UX quality guidelines
+alwaysApply: false
+---
+
+# Tailwind Styling & UI/UX
+
+## Tailwind Standards
+
+- Use Tailwind for all layout and spacing.
+- Use custom HSL color variables: `bg-background`, `text-foreground`, `border-border`, `bg-card`, `text-muted-foreground`, etc.
+- Use `cn()` helper from `@/lib/utils` for conditional class merging.
+- Use responsive breakpoints: `sm:`, `lg:`, `xl:` (mobile-first approach).
+- Use consistent spacing: multiples of 2 or 4 (e.g., `p-4`, `gap-2`, `space-y-3`).
+- Use rounded corners consistently: `rounded-lg`, `rounded-xl`, `rounded-full`.
+- Use border utilities: `border`, `border-border`, `border-b`, `border-t`.
+- Use opacity/transparency: `bg-card/80`, `bg-muted/90` for layered effects.
+
+## UI/UX Quality Rules
+
+- Ensure mobile responsiveness first (mobile-first design).
+- Use consistent spacing: multiples of 2 or 4.
+- Avoid inline styles unless absolutely necessary.
+- Use appropriate aria attributes for accessibility (`aria-label`, `aria-expanded`, etc.).
+- Use shadcn modal/dialog/drawer components for interactivity.
+- Use consistent typography: `text-sm`, `text-base`, `font-medium`, `tracking-tight`.
+- Use consistent icon sizes: `h-3.5 w-3.5`, `h-4 w-4` from lucide-react.
+- Apply hover states: `hover:bg-muted`, `hover:text-foreground`, `transition-colors`.
+- Use focus-visible states for keyboard navigation.

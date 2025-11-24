@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import { AddProfile } from "@/components/shared/add-profile";
 
 export default function ProfilesPage() {
   return (
@@ -16,10 +17,14 @@ export default function ProfilesPage() {
             Personalize replies per person, team, or account.
           </p>
         </div>
-        <Button className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 text-white dark:text-slate-950 text-sm font-medium tracking-tight px-3 py-1.5 hover:bg-sky-400 h-auto">
-          <Plus className="h-3.5 w-3.5" />
-          Add Profile
-        </Button>
+        <AddProfile
+          trigger={
+            <Button className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 text-white dark:text-slate-950 text-sm font-medium tracking-tight px-3 py-1.5 hover:bg-sky-400 h-auto">
+              <Plus className="h-3.5 w-3.5" />
+              Add Profile
+            </Button>
+          }
+        />
       </div>
 
       {/* Content */}

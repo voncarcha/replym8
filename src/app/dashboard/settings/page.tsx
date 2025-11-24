@@ -34,7 +34,9 @@ export default function SettingsPage() {
             </h4>
             <div className="grid gap-3 sm:grid-cols-2 text-[0.9375rem]">
               <div className="space-y-1.5">
-                <label className="block text-muted-foreground">Default length</label>
+                <label className="block text-muted-foreground">
+                  Default length
+                </label>
                 <select className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-sky-500">
                   <option>Short</option>
                   <option>Medium</option>
@@ -42,7 +44,9 @@ export default function SettingsPage() {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-muted-foreground">Fallback tone</label>
+                <label className="block text-muted-foreground">
+                  Fallback tone
+                </label>
                 <select className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-sky-500">
                   <option>Neutral</option>
                   <option>More formal</option>
@@ -51,7 +55,9 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="space-y-1.5 text-[0.9375rem]">
-              <label className="block text-muted-foreground">Signature (optional)</label>
+              <label className="block text-muted-foreground">
+                Signature (optional)
+              </label>
               <textarea
                 className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-1.5 min-h-16 focus:outline-none focus:ring-1 focus:ring-sky-500"
                 placeholder="Best,
@@ -68,14 +74,17 @@ Your name"
 
           <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-2 text-[0.9375rem]">
             <div className="flex items-center justify-between">
-              <span className="text-foreground font-medium">Data &amp; privacy</span>
+              <span className="text-foreground font-medium">
+                Data &amp; privacy
+              </span>
               <button className="text-[0.8125rem] text-sky-400 hover:text-sky-300">
                 Open policy
               </button>
             </div>
             <p className="text-muted-foreground">
-              Your messages and profiles stay private to your account by default. You can export or
-              delete your data at any time from this panel.
+              Your messages and profiles stay private to your account by
+              default. You can export or delete your data at any time from this
+              panel.
             </p>
           </Card>
         </div>
@@ -135,4 +144,3 @@ Your name"
     </>
   );
 }
-

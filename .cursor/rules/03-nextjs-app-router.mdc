@@ -1,0 +1,32 @@
+---
+description: Next.js App Router patterns, routing, and page generation
+alwaysApply: false
+---
+
+# Next.js App Router Rules
+
+## Route Structure
+
+- Use `layout.tsx` and `page.tsx` in every route.
+- Use `metadata` export (type `Metadata`) for SEO in each layout or page.
+- Place global providers in `src/app/providers.tsx` and import them in root layout.
+- Use Next.js `Image` and `Link` components where applicable.
+- Use async/await for server components that fetch data.
+- Always check authentication in server components using `currentUser()` from `@clerk/nextjs/server`.
+
+## Authentication & Authorization
+
+- Use Clerk's `auth()` and `currentUser()` for server-side auth checks.
+- Protect routes using middleware with `clerkMiddleware` and `createRouteMatcher`.
+- Use `UserButton` from `@clerk/nextjs` for user account management.
+- Apply Clerk dark theme when dark mode is active: `appearance={{ theme: theme === "dark" ? dark : undefined }}`.
+- Always check `userId` or `user` existence before accessing protected resources.
+
+## Page Generation Guidelines
+
+- Always include `metadata` export with `title` and `description`.
+- Wrap content in responsive container classes.
+- Use a consistent page heading structure (h1, h2, h3).
+- Include proper spacing with padding/margin utilities.
+- Use Card components for content sections.
+- Include border separators where appropriate (`border-b`, `border-t`).

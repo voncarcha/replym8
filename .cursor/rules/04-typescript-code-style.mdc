@@ -1,0 +1,41 @@
+---
+description: TypeScript patterns, naming conventions, and code style standards
+alwaysApply: false
+---
+
+# TypeScript & Code Style
+
+## File Naming Conventions
+
+- Use PascalCase for components and types/interfaces (e.g., `AddProfile`, `ProfileType`).
+- Use camelCase for utilities, functions, and variables (e.g., `createClient`, `getCurrentUser`).
+- Name hooks with `use` prefix (e.g., `useThemeStore`, `useMounted`).
+- Use kebab-case for file names (e.g., `add-profile.tsx`, `dashboard-sidebar.tsx`).
+
+## TypeScript Patterns
+
+- Use `interface` for object types, especially component props.
+- Use `type` for unions, intersections, and utility types.
+- Define component props interfaces with descriptive names (e.g., `AddProfileProps`).
+- Use `Readonly<{}>` for React children props in layouts.
+- Export types from `src/types/index.ts` for reuse across the codebase.
+- Use type inference with `z.infer<typeof schema>` for Zod schemas.
+- Type everything with TypeScript; avoid `any` types.
+
+## Code Quality
+
+- Do not leave dead code, console.logs, or unused imports.
+- Prefer async/await over `.then()` chains.
+- Use named exports for components and utilities.
+- Add comments only when necessary to explain complex logic.
+- Do not generate overly verbose comments.
+- Use TODO comments for future implementation (e.g., `// TODO: Implement API call`).
+- Remove console.logs before committing (except for development debugging).
+- Keep imports organized and remove unused imports.
+
+## Error Handling
+
+- Always handle errors in async functions with try/catch blocks.
+- Return meaningful error messages or throw errors in server actions.
+- Check for null/undefined values before accessing properties.
+- Use optional chaining (`?.`) and nullish coalescing (`??`) when appropriate.

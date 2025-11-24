@@ -8,10 +8,10 @@ export interface BaseComponentProps {
 // Database Types
 
 export interface User {
-  id: string; // UUID
-  clerk_id: string;
+  id: string; // text
   email: string;
-  name: string | null;
+  first_name: string | null;
+  last_name: string | null;
   created_at: Date;
 }
 
@@ -19,8 +19,9 @@ export type ProfileType = 'individual' | 'group';
 
 export interface Profile {
   id: string; // UUID
-  user_id: string; // UUID
+  user_id: string; // text
   name: string;
+  description: string | null;
   type: ProfileType;
   tone_preferences: Record<string, unknown>; // JSONB
   created_at: Date;
@@ -57,7 +58,7 @@ export interface Embedding {
 export interface GeneratedReply {
   id: string; // UUID
   profile_id: string; // UUID
-  user_id: string; // UUID
+  user_id: string; // text
   prompt_payload: Record<string, unknown>; // JSONB
   model_response: string;
   created_at: Date;

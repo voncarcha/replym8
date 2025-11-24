@@ -101,7 +101,7 @@ export default async function DashboardHomePage() {
                   <div className="h-6 w-6 rounded-lg bg-sky-500/10 border border-sky-400/60 flex items-center justify-center">
                     <Sparkles className="h-3.5 w-3.5 text-sky-400" />
                   </div>
-                  Generate reply
+                  Generate reply or compose
                 </div>
                 <span className="text-[0.8125rem] text-muted-foreground">
                   Generator

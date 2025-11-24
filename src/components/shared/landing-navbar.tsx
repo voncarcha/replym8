@@ -83,7 +83,7 @@ export function LandingNavbar() {
               </Link>
               <Link href="/sign-up">
                 <Button className="inline-flex items-center gap-1.5 rounded-full bg-sky-500 text-white dark:text-slate-950 text-xs sm:text-sm font-medium tracking-tight px-3 sm:px-4 py-1.5 hover:bg-sky-400 shadow-sm shadow-sky-500/40">
-                  <span>Get started</span>
+                  <span>Sign up</span>
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </Button>
               </Link>

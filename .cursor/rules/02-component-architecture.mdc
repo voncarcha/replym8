@@ -1,0 +1,35 @@
+---
+description: Component architecture, structure, and conversion patterns
+alwaysApply: false
+---
+
+# Component Architecture
+
+## Component Organization
+
+- Place UI primitives (from shadcn) in `src/components/ui/`.
+- Place custom shared components in `src/components/shared/`.
+- Place auth-related components in `src/components/auth/`.
+- Group route-specific components inside `app/(segment)/components/` if needed.
+- Put non-component logic in `lib/` or `utils/`.
+- Never put business logic inside React components unless simple.
+- Use Server Components by default; add `"use client"` only when needed (interactivity, hooks, browser APIs).
+
+## Component Conversion Rules (HTML → JSX)
+
+- When the user provides HTML + Tailwind code, convert it into React Server Components unless interactivity is needed.
+- Always convert `class` to `className`.
+- Refactor repeated UI blocks into reusable React components.
+- Use functional components with named exports (e.g., `export function ComponentName`).
+- Extract shared components like Navbar, Footer, Hero, Card, Button, Badge, etc.
+- Utilize shadcn/ui components for buttons, cards, dialogs, dropdowns, forms, inputs, alerts, drawers.
+
+## Component Patterns
+
+- Use shadcn Drawer component for slide-out panels (e.g., right-side drawers).
+- Use shadcn Card components for content containers.
+- Use shadcn Button with variants: `default`, `outline`, `ghost`, `destructive`, `secondary`, `link`.
+- Use lucide-react icons consistently throughout the app.
+- Use `Link` from `next/link` for internal navigation.
+- Use `usePathname()` from `next/navigation` for active route detection.
+- Use conditional rendering with `cn()` for active/inactive states.

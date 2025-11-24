@@ -1,0 +1,15 @@
+---
+description: Form handling patterns with React Hook Form and Zod validation
+alwaysApply: false
+---
+
+# Form Handling
+
+## React Hook Form & Zod
+
+- Use React Hook Form (`useForm`) with Zod (`zodResolver`) for form validation.
+- Define Zod schemas before component definition.
+- Use shadcn Form components (`Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage`, `FormDescription`).
+- Use `z.infer<typeof schema>` for TypeScript types from Zod schemas.
+- Handle form submission with async functions and proper error handling.
+- Reset forms after successful submission.

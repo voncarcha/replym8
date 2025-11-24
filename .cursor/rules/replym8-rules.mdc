@@ -1,0 +1,168 @@
+---
+description: Cursor Rules for ReplyM8 Project - Next.js 16, TypeScript, TailwindCSS v4, Clerk, Supabase
+alwaysApply: true
+---
+
+# Cursor Rules for ReplyM8 Project
+
+## General Project Setup
+
+- Always use Next.js 16 App Router with TypeScript (strict mode enabled).
+- Use TailwindCSS v4 for styling with custom HSL color system.
+- Use shadcn/ui components when possible instead of custom ones.
+- Follow clean folder structure under src/: app/, components/, lib/, hooks/, utils/, types/.
+- Use absolute imports via @/ alias (configured in tsconfig.json).
+- Enable dark mode using class strategy in Tailwind (`darkMode: ["class"]`).
+- Use Clerk for authentication with server-side auth checks.
+- Use Supabase for database with SSR support via @supabase/ssr.
+
+## Component Conversion Rules (HTML → JSX)
+
+- When the user provides HTML + Tailwind code, convert it into React Server Components unless interactivity is needed.
+- Always convert `class` to `className`.
+- Refactor repeated UI blocks into reusable React components.
+- Use functional components with named exports (e.g., `export function ComponentName`).
+- Extract shared components like Navbar, Footer, Hero, Card, Button, Badge, etc.
+- Utilize shadcn/ui components for buttons, cards, dialogs, dropdowns, forms, inputs, alerts, drawers.
+
+## Component Architecture
+
+- Place UI primitives (from shadcn) in `src/components/ui/`.
+- Place custom shared components in `src/components/shared/`.
+- Place auth-related components in `src/components/auth/`.
+- Group route-specific components inside `app/(segment)/components/` if needed.
+- Put non-component logic in `lib/` or `utils/`.
+- Never put business logic inside React components unless simple.
+- Use Server Components by default; add `"use client"` only when needed (interactivity, hooks, browser APIs).
+
+## Next.js App Router Rules
+
+- Use `layout.tsx` and `page.tsx` in every route.
+- Use `metadata` export (type `Metadata`) for SEO in each layout or page.
+- Place global providers in `src/app/providers.tsx` and import them in root layout.
+- Use Next.js `Image` and `Link` components where applicable.
+- Use async/await for server components that fetch data.
+- Always check authentication in server components using `currentUser()` from `@clerk/nextjs/server`.
+
+## Authentication & Authorization
+
+- Use Clerk's `auth()` and `currentUser()` for server-side auth checks.
+- Protect routes using middleware with `clerkMiddleware` and `createRouteMatcher`.
+- Use `UserButton` from `@clerk/nextjs` for user account management.
+- Apply Clerk dark theme when dark mode is active: `appearance={{ theme: theme === "dark" ? dark : undefined }}`.
+- Always check `userId` or `user` existence before accessing protected resources.
+
+## Database & Server Actions
+
+- Use Supabase with SSR via `createServerClient` from `@supabase/ssr`.
+- Create Supabase clients in `src/utils/supabase/server.ts` for server-side usage.
+- Use `"use server"` directive for all server actions.
+- Place server actions in `src/app/actions/` directory.
+- Always validate user authentication in server actions before database operations.
+- Use TypeScript interfaces from `src/types/index.ts` for database types.
+
+## State Management
+
+- Use React state sparingly; prefer server components unless client-side interactivity is needed.
+- For shared global state, use Zustand with persistence middleware when needed.
+- Store Zustand stores in `src/lib/store.ts`.
+- Use Zustand persist middleware with localStorage for client-side persistence.
+- For form state, use React Hook Form with Zod validation.
+- For data fetching, prefer server actions or server components over client-side fetching.
+
+## Form Handling
+
+- Use React Hook Form (`useForm`) with Zod (`zodResolver`) for form validation.
+- Define Zod schemas before component definition.
+- Use shadcn Form components (`Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage`, `FormDescription`).
+- Use `z.infer<typeof schema>` for TypeScript types from Zod schemas.
+- Handle form submission with async functions and proper error handling.
+- Reset forms after successful submission.
+
+## File Naming and Code Style
+
+- Use PascalCase for components and types/interfaces (e.g., `AddProfile`, `ProfileType`).
+- Use camelCase for utilities, functions, and variables (e.g., `createClient`, `getCurrentUser`).
+- Name hooks with `use` prefix (e.g., `useThemeStore`, `useMounted`).
+- Use kebab-case for file names (e.g., `add-profile.tsx`, `dashboard-sidebar.tsx`).
+- Do not leave dead code, console.logs, or unused imports.
+- Type everything with TypeScript; avoid `any` types.
+- Prefer async/await over `.then()` chains.
+- Use named exports for components and utilities.
+- Define TypeScript interfaces/types in `src/types/index.ts` for shared types.
+
+## TypeScript Patterns
+
+- Use `interface` for object types, especially component props.
+- Use `type` for unions, intersections, and utility types.
+- Define component props interfaces with descriptive names (e.g., `AddProfileProps`).
+- Use `Readonly<{}>` for React children props in layouts.
+- Export types from `src/types/index.ts` for reuse across the codebase.
+- Use type inference with `z.infer<typeof schema>` for Zod schemas.
+
+## Tailwind Standards
+
+- Use Tailwind for all layout and spacing.
+- Use custom HSL color variables: `bg-background`, `text-foreground`, `border-border`, `bg-card`, `text-muted-foreground`, etc.
+- Use `cn()` helper from `@/lib/utils` for conditional class merging.
+- Use responsive breakpoints: `sm:`, `lg:`, `xl:` (mobile-first approach).
+- Use consistent spacing: multiples of 2 or 4 (e.g., `p-4`, `gap-2`, `space-y-3`).
+- Use rounded corners consistently: `rounded-lg`, `rounded-xl`, `rounded-full`.
+- Use border utilities: `border`, `border-border`, `border-b`, `border-t`.
+- Use opacity/transparency: `bg-card/80`, `bg-muted/90` for layered effects.
+
+## UI/UX Quality Rules
+
+- Ensure mobile responsiveness first (mobile-first design).
+- Use consistent spacing: multiples of 2 or 4.
+- Avoid inline styles unless absolutely necessary.
+- Use appropriate aria attributes for accessibility (`aria-label`, `aria-expanded`, etc.).
+- Use shadcn modal/dialog/drawer components for interactivity.
+- Use consistent typography: `text-sm`, `text-base`, `font-medium`, `tracking-tight`.
+- Use consistent icon sizes: `h-3.5 w-3.5`, `h-4 w-4` from lucide-react.
+- Apply hover states: `hover:bg-muted`, `hover:text-foreground`, `transition-colors`.
+- Use focus-visible states for keyboard navigation.
+
+## Component Patterns
+
+- Use shadcn Drawer component for slide-out panels (e.g., right-side drawers).
+- Use shadcn Card components for content containers.
+- Use shadcn Button with variants: `default`, `outline`, `ghost`, `destructive`, `secondary`, `link`.
+- Use lucide-react icons consistently throughout the app.
+- Use `Link` from `next/link` for internal navigation.
+- Use `usePathname()` from `next/navigation` for active route detection.
+- Use conditional rendering with `cn()` for active/inactive states.
+
+## Error Handling
+
+- Always handle errors in async functions with try/catch blocks.
+- Return meaningful error messages or throw errors in server actions.
+- Check for null/undefined values before accessing properties.
+- Use optional chaining (`?.`) and nullish coalescing (`??`) when appropriate.
+
+## Code Comments & Cleanliness
+
+- Add comments only when necessary to explain complex logic.
+- Do not generate overly verbose comments.
+- Use TODO comments for future implementation (e.g., `// TODO: Implement API call`).
+- Remove console.logs before committing (except for development debugging).
+- Keep imports organized and remove unused imports.
+
+## When Generating Pages
+
+- Always include `metadata` export with `title` and `description`.
+- Wrap content in responsive container classes.
+- Use a consistent page heading structure (h1, h2, h3).
+- Include proper spacing with padding/margin utilities.
+- Use Card components for content sections.
+- Include border separators where appropriate (`border-b`, `border-t`).
+
+## Final Output Rules
+
+- Always generate fully functional, runnable code.
+- Follow conventions across the entire project consistently.
+- If user provides unclear instructions, ask clarifying questions.
+- Never invent APIs or features unless explicitly requested.
+- Ensure all generated components compile without TypeScript errors.
+- Use existing patterns from the codebase as reference.
+- Match the existing code style and formatting.
