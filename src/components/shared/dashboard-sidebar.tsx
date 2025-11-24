@@ -17,8 +17,7 @@ import { cn } from "@/lib/utils";
 import { UserButton } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { useThemeStore } from "@/lib/store";
-import { getProfileCount } from "@/app/actions/profile";
+import { useThemeStore, useProfileStore } from "@/lib/store";
 
 const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -31,29 +30,17 @@ const navItems = [
 export function DashboardSidebar() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [profileCount, setProfileCount] = useState<number | null>(null);
   const userButtonRef = useRef<HTMLDivElement>(null);
   const theme = useThemeStore((state) => state.theme);
-
-  const refreshProfileCount = () => {
-    getProfileCount().then(setProfileCount).catch(() => setProfileCount(0));
-  };
+  const { profileCount, fetchProfileCount } = useProfileStore();
 
   useEffect(() => {
-    // Fetch profile count on mount
-    refreshProfileCount();
-
-    // Listen for profile creation events
-    const handleProfileCreated = () => {
-      refreshProfileCount();
-    };
-
-    window.addEventListener("profileCreated", handleProfileCreated);
-
-    return () => {
-      window.removeEventListener("profileCreated", handleProfileCreated);
-    };
-  }, []);
+    // Fetch profile count on mount if not already loaded
+    if (profileCount === null) {
+      fetchProfileCount();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);

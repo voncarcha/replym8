@@ -284,3 +284,72 @@ export async function getProfileCount(): Promise<number> {
   }
 }
 
+export async function deleteProfile(profileId: string): Promise<{ success: boolean; message: string }> {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  let supabase;
+  try {
+    supabase = createAdminClient();
+  } catch (error) {
+    console.error("Failed to create admin client:", error);
+    throw new Error(
+      "Server configuration error. Please check SUPABASE_SERVICE_ROLE_KEY environment variable."
+    );
+  }
+
+  try {
+    // First, verify the profile belongs to the user
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, user_id")
+      .eq("id", profileId)
+      .eq("user_id", userId)
+      .single();
+
+    if (profileError || !profile) {
+      throw new Error("Profile not found or unauthorized");
+    }
+
+    // Delete profile members first (due to foreign key constraint)
+    const { error: membersError } = await supabase
+      .from("profile_members")
+      .delete()
+      .eq("profile_id", profileId);
+
+    if (membersError) {
+      console.warn("Error deleting profile members:", membersError);
+      // Continue with profile deletion even if members deletion fails
+    }
+
+    // Delete the profile
+    const { error: deleteError } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", profileId)
+      .eq("user_id", userId);
+
+    if (deleteError) {
+      console.error("Error deleting profile:", deleteError);
+      throw new Error(`Failed to delete profile: ${deleteError.message}`);
+    }
+
+    // Revalidate the profiles page
+    revalidatePath("/dashboard/profiles");
+
+    return {
+      success: true,
+      message: "Profile deleted successfully",
+    };
+  } catch (error) {
+    console.error("Error in deleteProfile:", error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Failed to delete profile");
+  }
+}
+

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useProfileStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -24,15 +25,14 @@ export function AddProfile({ onSuccess, trigger }: AddProfileProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formRef = useRef<SimpleProfileFormHandle>(null);
+  const incrementProfileCount = useProfileStore((state) => state.incrementProfileCount);
 
   const handleSuccess = () => {
     setIsSubmitting(false);
     formRef.current?.resetSubmitting();
     setOpen(false);
-    // Dispatch custom event to notify other components
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("profileCreated"));
-    }
+    // Update profile count in store
+    incrementProfileCount();
     // Refresh the page to show the new profile
     router.refresh();
     onSuccess?.();
