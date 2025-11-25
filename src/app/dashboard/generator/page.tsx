@@ -19,6 +19,7 @@ export default function ReplyGeneratorPage() {
   const [length, setLength] = useState<Length>("short");
   const [aiAgent, setAiAgent] = useState<AIAgent>("groq");
   const [message, setMessage] = useState("");
+  const [additionalContext, setAdditionalContext] = useState("");
   const [composeMessage, setComposeMessage] = useState("");
   const [composeTo, setComposeTo] = useState("");
   const [composeSubject, setComposeSubject] = useState("");
@@ -68,6 +69,7 @@ export default function ReplyGeneratorPage() {
         },
         body: JSON.stringify({
           message,
+          additionalContext: additionalContext.trim() || undefined,
           profileId: selectedProfile,
           length,
           replyId: replyId, // Include replyId if regenerating
@@ -241,6 +243,23 @@ export default function ReplyGeneratorPage() {
                     Tip: include a few lines of previous context for best results.
                   </span>
                   <span>{message.length} / 2,000 chars</span>
+                </div>
+                <div className="space-y-2 pt-4 border-t border-border">
+                  <label className="text-sm font-medium text-foreground block">
+                    Additional context & intent
+                  </label>
+                  <textarea
+                    className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-2 min-h-20 focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="Add any additional context, intent, or specific instructions for the reply (e.g., 'I want to politely decline', 'Emphasize the deadline', 'Keep it brief and friendly')..."
+                    value={additionalContext}
+                    onChange={(e) => setAdditionalContext(e.target.value)}
+                  />
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>
+                      Optional: provide context or intent to guide the AI reply.
+                    </span>
+                    <span>{additionalContext.length} / 500 chars</span>
+                  </div>
                 </div>
                 <div className="flex flex-col gap-2 pt-2">
                   {error && (

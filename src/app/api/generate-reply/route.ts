@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { message, profileId, length, replyId, aiAgent = "groq" } = await req.json();
+    const { message, additionalContext, profileId, length, replyId, aiAgent = "groq" } = await req.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json(
@@ -135,6 +135,7 @@ ${profileTags.length > 0 ? `- Incorporate these style elements/tags: ${profileTa
 
     const userPrompt = `Incoming message to reply to:
 ${message}
+${additionalContext ? `\nAdditional context and intent:\n${additionalContext}` : ""}
 
 Generate an appropriate reply:`;
 
@@ -161,6 +162,7 @@ Generate an appropriate reply:`;
           .update({
             prompt_payload: {
               message,
+              additionalContext: additionalContext || null,
               length,
               systemPrompt,
               userPrompt,
@@ -187,6 +189,7 @@ Generate an appropriate reply:`;
             user_id: userId,
             prompt_payload: {
               message,
+              additionalContext: additionalContext || null,
               length,
               systemPrompt,
               userPrompt,
