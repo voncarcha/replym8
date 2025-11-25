@@ -146,7 +146,7 @@ Generate an appropriate reply:`;
         { role: "user", content: userPrompt },
       ],
       temperature: 0.7,
-      max_tokens: length === "short" ? 150 : length === "medium" ? 300 : 500,
+      max_tokens: effectiveLength === "short" ? 150 : effectiveLength === "medium" ? 300 : 500,
     });
 
     const generatedReply =

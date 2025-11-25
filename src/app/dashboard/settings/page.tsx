@@ -132,7 +132,7 @@ Your name"
                 <span>214</span>
               </div>
               <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                <div className="h-full w-4/5 bg-gradient-to-r from-sky-500 to-emerald-400" />
+                <div className="h-full w-4/5 bg-linear-to-r from-sky-500 to-emerald-400" />
               </div>
               <p className="text-[0.8125rem] text-muted-foreground/70">
                 You&apos;re in the top 15% of ReplyM8 power users this week.
