@@ -2,23 +2,117 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Copy, RefreshCw, Info, Send, Plus, FolderOpen, List } from "lucide-react";
-import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Copy, RefreshCw, Info, Send, Plus, FolderOpen, List, Loader2, Check } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { ProfileWithMembers, getProfiles } from "@/app/actions/profile";
+import Link from "next/link";
+import { toast } from "sonner";
 
 type Mode = "reply" | "compose";
 type Length = "short" | "medium" | "long";
+type AIAgent = "groq" | "openai";
 
 export default function ReplyGeneratorPage() {
   const [mode, setMode] = useState<Mode>("reply");
   const [length, setLength] = useState<Length>("short");
+  const [aiAgent, setAiAgent] = useState<AIAgent>("groq");
   const [message, setMessage] = useState("");
   const [composeMessage, setComposeMessage] = useState("");
   const [composeTo, setComposeTo] = useState("");
   const [composeSubject, setComposeSubject] = useState("");
-  const [selectedProfile, setSelectedProfile] = useState("lena");
+  const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [generatedReply, setGeneratedReply] = useState("");
   const [isReplyGenerated, setIsReplyGenerated] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [replyId, setReplyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [profiles, setProfiles] = useState<ProfileWithMembers[]>([]);
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
+  const [isCopied, setIsCopied] = useState(false);
+
+  // Fetch profiles on mount using server action
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      try {
+        const profilesData = await getProfiles();
+        setProfiles(profilesData || []);
+      } catch (err) {
+        console.error("Failed to fetch profiles:", err);
+      } finally {
+        setIsLoadingProfiles(false);
+      }
+    };
+
+    fetchProfiles();
+  }, []);
+
+  // Get selected profile object
+  const selectedProfileObj = profiles.find((p) => p.id === selectedProfile);
+
+  const handleGenerateReply = async () => {
+    if (!message.trim()) return;
+
+    setIsGenerating(true);
+    setError(null);
+    setIsReplyGenerated(false);
+    const isRegenerating = replyId !== null;
+    toast.loading(isRegenerating ? "Regenerating reply..." : "Generating reply...", { id: "generating-reply" });
+
+    try {
+      const response = await fetch("/api/generate-reply", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message,
+          profileId: selectedProfile,
+          length,
+          replyId: replyId, // Include replyId if regenerating
+          aiAgent, // Include selected AI agent
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate reply");
+      }
+
+      const data = await response.json();
+      setGeneratedReply(data.reply);
+      setIsReplyGenerated(true);
+      // Store the reply ID if provided (for updates) or if it's a new reply
+      if (data.replyId) {
+        setReplyId(data.replyId);
+      }
+      toast.success(isRegenerating ? "Reply regenerated successfully!" : "Reply generated successfully!", { id: "generating-reply" });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(errorMessage);
+      toast.error(errorMessage, { id: "generating-reply" });
+      console.error("Error generating reply:", err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleCopyToClipboard = async () => {
+    if (!generatedReply) return;
+
+    try {
+      await navigator.clipboard.writeText(generatedReply);
+      setIsCopied(true);
+      toast.success("Copied to clipboard!");
+      // Reset copied state after 2 seconds
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+      toast.error("Failed to copy to clipboard");
+    }
+  };
 
   return (
     <>
@@ -138,6 +232,7 @@ export default function ReplyGeneratorPage() {
                     if (isReplyGenerated) {
                       setIsReplyGenerated(false);
                       setGeneratedReply("");
+                      setReplyId(null); // Reset reply ID when message changes
                     }
                   }}
                 />
@@ -147,22 +242,46 @@ export default function ReplyGeneratorPage() {
                   </span>
                   <span>{message.length} / 2,000 chars</span>
                 </div>
-                <div className="flex items-center justify-end pt-2">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      if (message.trim()) {
-                        // TODO: Implement actual reply generation logic
-                        setGeneratedReply("Here's a concise update you can send Lena. It highlights the key risks, keeps the tone formal, and makes it easy for her to speak to tradeoffs in the review.");
-                        setIsReplyGenerated(true);
-                      }
-                    }}
-                    disabled={!message.trim()}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-3 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                    Generate reply
-                  </Button>
+                <div className="flex flex-col gap-2 pt-2">
+                  {error && (
+                    <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2">
+                      <p className="text-sm text-destructive">{error}</p>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-muted-foreground whitespace-nowrap">
+                        AI Agent
+                      </label>
+                      <Select value={aiAgent} onValueChange={(value) => setAiAgent(value as AIAgent)}>
+                        <SelectTrigger className="w-[190px] h-8 text-sm [&>span]:truncate [&>span]:text-left">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="min-w-[190px]">
+                          <SelectItem value="groq">Groq (llama-3.3-70b-versatile)</SelectItem>
+                          <SelectItem value="openai">OpenAI (gpt-4o-mini)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={handleGenerateReply}
+                      disabled={!message.trim() || isGenerating}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-3 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-3.5 w-3.5" />
+                          Generate reply
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </Card>
             </>
@@ -329,13 +448,43 @@ export default function ReplyGeneratorPage() {
             </div>
             <div className="flex items-center justify-between text-[0.8125rem] text-muted-foreground">
               <span>OCR will extract context for this profile.</span>
-              <div className="inline-flex items-center gap-1">
-                <span className="text-foreground">Link to profile</span>
-                <select className="rounded-md border border-border bg-background text-[0.8125rem] text-foreground px-1.5 py-0.5">
-                  <option>Lena · Product Lead</option>
-                  <option>ACME · Exec team</option>
-                </select>
-              </div>
+              {profiles.length > 0 && (
+                <div className="inline-flex items-center gap-1">
+                  <span className="text-foreground">Link to profile</span>
+                  <select
+                    className="rounded-md border border-border bg-background text-[0.8125rem] text-foreground px-1.5 py-0.5"
+                    value={selectedProfile || ""}
+                    onChange={(e) => setSelectedProfile(e.target.value || null)}
+                  >
+                    <option value="">Select profile</option>
+                    {profiles.map((profile) => {
+                      let displayName = profile.name;
+                      if (
+                        profile.type === "group" &&
+                        profile.members &&
+                        profile.members.length > 0
+                      ) {
+                        const memberNames = profile.members
+                          .slice(0, 2)
+                          .map((m) => m.name)
+                          .join(", ");
+                        if (profile.members.length > 2) {
+                          displayName = `${profile.name} · ${memberNames} +${
+                            profile.members.length - 2
+                          }`;
+                        } else {
+                          displayName = `${profile.name} · ${memberNames}`;
+                        }
+                      }
+                      return (
+                        <option key={profile.id} value={profile.id}>
+                          {displayName}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              )}
             </div>
           </Card>
           )}
@@ -351,31 +500,84 @@ export default function ReplyGeneratorPage() {
                 </label>
                 <Button
                   variant="outline"
+                  asChild
                   className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto"
                 >
-                  Manage profiles
+                  <Link href="/dashboard/profiles">Manage profiles</Link>
                 </Button>
               </div>
               <select
                 className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                value={selectedProfile}
-                onChange={(e) => setSelectedProfile(e.target.value)}
+                value={selectedProfile || ""}
+                onChange={(e) => {
+                  setSelectedProfile(e.target.value || null);
+                  // Reset generated reply when profile changes
+                  if (isReplyGenerated) {
+                    setIsReplyGenerated(false);
+                    setGeneratedReply("");
+                    setReplyId(null);
+                  }
+                }}
+                disabled={isLoadingProfiles}
               >
-                <option value="lena">Lena · Product Lead (Boss)</option>
-                <option value="acme">ACME · Exec team (Client group)</option>
-                <option value="alex">Alex · Friend</option>
+                <option value="">Select a profile (optional)</option>
+                {profiles.map((profile) => {
+                  // Build display name similar to profile-list.tsx
+                  let displayName = profile.name;
+                  if (
+                    profile.type === "group" &&
+                    profile.members &&
+                    profile.members.length > 0
+                  ) {
+                    const memberNames = profile.members
+                      .slice(0, 2)
+                      .map((m) => m.name)
+                      .join(", ");
+                    if (profile.members.length > 2) {
+                      displayName = `${profile.name} · ${memberNames} +${
+                        profile.members.length - 2
+                      }`;
+                    } else {
+                      displayName = `${profile.name} · ${memberNames}`;
+                    }
+                  }
+                  const relationshipType = profile.relationship_type || "Other";
+                  return (
+                    <option key={profile.id} value={profile.id}>
+                      {displayName} ({relationshipType})
+                    </option>
+                  );
+                })}
               </select>
-              <div className="flex flex-wrap gap-1.5 text-[0.8125rem] text-foreground">
-                <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
-                  Formal
-                </span>
-                <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
-                  Short replies
-                </span>
-                <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
-                  No emojis
-                </span>
-              </div>
+              {selectedProfileObj && selectedProfileObj.tone_preferences && (
+                <div className="flex flex-wrap gap-1.5 text-[0.8125rem] text-foreground">
+                  {selectedProfileObj.tone_preferences.formality && (
+                    <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
+                      {selectedProfileObj.tone_preferences.formality}
+                    </span>
+                  )}
+                  {selectedProfileObj.tone_preferences.preferredLength && (
+                    <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
+                      {selectedProfileObj.tone_preferences.preferredLength} replies
+                    </span>
+                  )}
+                  {selectedProfileObj.tone_preferences.emojiUsage === "None" && (
+                    <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
+                      No emojis
+                    </span>
+                  )}
+                  {selectedProfileObj.tone_preferences.tags &&
+                    selectedProfileObj.tone_preferences.tags.length > 0 &&
+                    selectedProfileObj.tone_preferences.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-background/80 border border-border px-2 py-0.5"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                </div>
+              )}
             </Card>
 
             <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
@@ -393,7 +595,7 @@ export default function ReplyGeneratorPage() {
                 </div>
               </div>
               <div className="rounded-lg border border-border bg-background/80 p-3 min-h-28">
-                <p className="text-sm text-foreground">
+                <p className="text-sm text-foreground whitespace-pre-wrap">
                   {isReplyGenerated
                     ? generatedReply
                     : message
@@ -405,26 +607,40 @@ export default function ReplyGeneratorPage() {
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-2.5 py-1.5 hover:bg-primary/90 h-auto"
+                    onClick={handleCopyToClipboard}
+                    disabled={!isReplyGenerated || !generatedReply}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-2.5 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Copy className="h-3.5 w-3.5" />
-                    Copy
+                    {isCopied ? (
+                      <>
+                        <Check className="h-3.5 w-3.5" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5" />
+                        Copy
+                      </>
+                    )}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      if (message.trim()) {
-                        // TODO: Implement actual reply generation logic
-                        setGeneratedReply("Here's a concise update you can send Lena. It highlights the key risks, keeps the tone formal, and makes it easy for her to speak to tradeoffs in the review.");
-                        setIsReplyGenerated(true);
-                      }
-                    }}
-                    disabled={!message.trim() || !isReplyGenerated}
+                    onClick={handleGenerateReply}
+                    disabled={!message.trim() || isGenerating}
                     className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    Regenerate
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Regenerating...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        Regenerate
+                      </>
+                    )}
                   </Button>
                 </div>
                 <div className="inline-flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
@@ -440,14 +656,16 @@ export default function ReplyGeneratorPage() {
             </Card>
 
             {/* Small insight footer */}
-            <Card className="rounded-xl border-border bg-card/70 p-3 flex items-start gap-2 text-sm text-muted-foreground">
-              <Info className="mt-0.5 h-3.5 w-3.5 text-sky-400 shrink-0" />
-              <p>
-                ReplyM8 keeps this reply aligned with Lena&apos;s profile and
-                similar past threads. You can still tweak tone or length before
-                copying.
-              </p>
-            </Card>
+            {selectedProfileObj && (
+              <Card className="rounded-xl border-border bg-card/70 p-3 flex items-start gap-2 text-sm text-muted-foreground">
+                <Info className="mt-0.5 h-3.5 w-3.5 text-sky-400 shrink-0" />
+                <p>
+                  ReplyM8 keeps this reply aligned with {selectedProfileObj.name}&apos;s profile and
+                  similar past threads. You can still tweak tone or length before
+                  copying.
+                </p>
+              </Card>
+            )}
           </div>
         )}
       </div>
