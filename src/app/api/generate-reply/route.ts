@@ -1,6 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-import { getAIClient, getModelName, type AIProvider } from "@/lib/openai-client";
+import {
+  getAIClient,
+  getModelName,
+  type AIProvider,
+} from "@/lib/openai-client";
 import { createAdminClient } from "@/utils/supabase/server";
 
 export async function POST(req: NextRequest) {
@@ -11,7 +15,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { message, additionalContext, profileId, length, replyId, aiAgent = "groq" } = await req.json();
+    const {
+      message,
+      additionalContext,
+      profileId,
+      length,
+      replyId,
+      aiAgent = "groq",
+    } = await req.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json(
@@ -24,7 +35,7 @@ export async function POST(req: NextRequest) {
     // Step 1: Generate embedding for the incoming message
     // const openai = getOpenAIClient();
     // let vector: number[];
-    // 
+    //
     // try {
     //   const embeddingResponse = await openai.embeddings.create({
     //     model: "text-embedding-3-small",
@@ -74,11 +85,44 @@ export async function POST(req: NextRequest) {
     const model = getModelName(aiProvider);
     const supabase = createAdminClient();
 
-    // Step 4: Get profile information if profileId is provided
+    // Fetch the user's recent messages from generated_replies
+    // Filter by profile_id if provided, so each profile only uses its own history
+    // Limit to 5 messages to balance context vs prompt length
+    // Including model_response helps AI learn from previous generated replies for consistency
+    const HISTORY_LIMIT = 5;
+    
+    let historyQuery = supabase
+      .from("generated_replies")
+      .select("prompt_payload, model_response, created_at")
+      .eq("user_id", userId);
+
+    if (profileId) {
+      historyQuery = historyQuery.eq("profile_id", profileId);
+    }
+
+    const { data: history } = await historyQuery
+      .order("created_at", { ascending: false })
+      .limit(HISTORY_LIMIT);
+
+    // Convert them into LLM-readable conversation history
+    const conversationHistory = history
+      ? history
+          .reverse() // oldest → newest
+          .map((item) => {
+            const promptPayload = item.prompt_payload as { message?: string };
+            const userMessage = promptPayload?.message || "";
+            const assistantReply = item.model_response || "";
+            return `User: ${userMessage}\nAssistant: ${assistantReply}`;
+          })
+          .join("\n\n")
+      : "";
+
+    // Get profile information if profileId is provided
     let profileContext = "";
     let profilePreferredLength: string | null = null;
     let profileTags: string[] = [];
-    
+    let tone = "";
+
     if (profileId) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -91,13 +135,18 @@ export async function POST(req: NextRequest) {
         const tonePrefs = profile.tone_preferences;
         profilePreferredLength = tonePrefs.preferredLength || null;
         profileTags = tonePrefs.tags || [];
-        
+
+        // Construct tone string from formality and friendliness
+        const formality = tonePrefs.formality || "Not specified";
+        const friendliness = tonePrefs.friendliness || "Not specified";
+        tone = `${formality}, ${friendliness}`;
+
         profileContext = `
 Profile: ${profile.name}
 Relationship: ${profile.relationship_type}
 Tone Preferences:
-- Formality: ${tonePrefs.formality || "Not specified"}
-- Friendliness: ${tonePrefs.friendliness || "Not specified"}
+- Formality: ${formality}
+- Friendliness: ${friendliness}
 - Preferred Length: ${tonePrefs.preferredLength || "Not specified"}
 - Emoji Usage: ${tonePrefs.emojiUsage || "Not specified"}
 ${profileTags.length > 0 ? `- Tags: ${profileTags.join(", ")}` : ""}
@@ -107,37 +156,56 @@ ${profile.notes ? `Notes: ${profile.notes}` : ""}`;
 Profile: ${profile.name}
 Relationship: ${profile.relationship_type}
 ${profile.notes ? `Notes: ${profile.notes}` : ""}`;
+        tone = "Not specified";
       }
+    } else {
+      tone = "Not specified";
     }
 
-    // Step 5: Generate reply using LLM
+    // Generate reply using LLM
     // Use profile's preferred length if available, otherwise use the length parameter from UI
-    const effectiveLength = profilePreferredLength 
-      ? profilePreferredLength.toLowerCase() as "short" | "medium" | "long"
+    const effectiveLength = profilePreferredLength
+      ? (profilePreferredLength.toLowerCase() as "short" | "medium" | "long")
       : length;
-    
-    const lengthInstruction =
-      effectiveLength === "short"
-        ? "Keep the reply concise (2-3 sentences)."
-        : effectiveLength === "medium"
-        ? "Write a medium-length reply (1-2 paragraphs)."
-        : "Write a detailed, longer reply (2-3 paragraphs).";
 
-    const systemPrompt = `You are ReplyM8, an AI assistant that helps users write contextual, tone-appropriate email replies.
-${profileContext ? `\nUse this profile information to match the tone and style:${profileContext}` : ""}
+    // Use history-aware system prompt for both Groq and OpenAI
+    const systemPrompt = `You are ReplyMate AI, a personalized reply generator.
 
-Guidelines:
-- Match the tone and formality level of the profile
-- ${lengthInstruction}
-${profileTags.length > 0 ? `- Incorporate these style elements/tags: ${profileTags.join(", ")}` : ""}
-- Write naturally and professionally
-- Address the key points from the incoming message`;
+You have access to the user's past message history. Use it to understand:
+- The user's writing style
+- The tone they prefer (friendly, professional, concise, etc.)
+- Their typical phrasing patterns
+- Any recurring context (projects, people, tasks, etc.)
 
-    const userPrompt = `Incoming message to reply to:
-${message}
-${additionalContext ? `\nAdditional context and intent:\n${additionalContext}` : ""}
+Rules for using past messages:
+1. Use history ONLY to improve tone and context understanding.
+2. Never reference past messages directly ("based on previous messages…").
+3. Never quote earlier conversations.
+4. Never reveal or describe the history to the user.
+5. If the history is empty, reply normally.
+6. Maintain consistent tone with previous user interactions.
+7. Generate a reply that matches the requested tone, length, and tags.
+${profileContext ? `\n\nProfile context:${profileContext}` : ""}
 
-Generate an appropriate reply:`;
+ALWAYS output only the ready-to-send reply message. No explanations.`;
+
+    // Construct user prompt with conversation history for both providers
+    const userPrompt = `Here is the user's past conversation history (do not reveal this to the user):
+
+${conversationHistory || "(No previous conversation history)"}
+
+Here is the new incoming message:
+
+"${message}"
+${additionalContext ? `\n\nAdditional context and intent:\n${additionalContext}` : ""}
+
+Here are the user's settings:
+
+Tone: ${tone}
+Length: ${effectiveLength}
+Tags: ${profileTags.join(", ") || "None"}
+
+Generate the best possible reply.`;
 
     const completion = await client.chat.completions.create({
       model,
@@ -146,13 +214,18 @@ Generate an appropriate reply:`;
         { role: "user", content: userPrompt },
       ],
       temperature: 0.7,
-      max_tokens: effectiveLength === "short" ? 150 : effectiveLength === "medium" ? 300 : 500,
+      max_tokens:
+        effectiveLength === "short"
+          ? 150
+          : effectiveLength === "medium"
+          ? 300
+          : 500,
     });
 
     const generatedReply =
       completion.choices[0]?.message?.content || "Failed to generate reply.";
 
-    // Step 6: Save or update the generated reply to database
+    // Save or update the generated reply to database
     let savedReplyId: string | null = null;
     if (profileId) {
       if (replyId) {
@@ -208,7 +281,7 @@ Generate an appropriate reply:`;
       }
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       reply: generatedReply,
       replyId: savedReplyId,
       // Include systemPrompt in response for debugging (optional - remove in production if needed)
@@ -221,7 +294,7 @@ Generate an appropriate reply:`;
         profilePreferredLength: profilePreferredLength || null,
         aiProvider,
         model,
-      }
+      },
     });
   } catch (error) {
     console.error("Error generating reply:", error);
@@ -234,4 +307,3 @@ Generate an appropriate reply:`;
     );
   }
 }
-
