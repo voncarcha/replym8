@@ -32,14 +32,14 @@ export function ComposeInputSection({
             Start from scratch with AI help.
           </span>
         </div>
-        <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+        {/* <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
           <span className="rounded-full border border-border bg-card px-2 py-0.5">
             Email
           </span>
           <span className="rounded-full border border-border bg-card px-2 py-0.5">
             DM
           </span>
-        </div>
+        </div> */}
       </div>
       {/* To / Subject row */}
       <div className="space-y-2">

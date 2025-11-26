@@ -4,6 +4,7 @@ let openaiInstance: OpenAI | null = null;
 let groqInstance: OpenAI | null = null;
 
 export type AIProvider = "groq" | "openai";
+export type GroqModel = "llama-3.1-8b-instant" | "llama-3.3-70b-versatile";
 
 /**
  * Gets or creates the OpenAI client instance.
@@ -64,10 +65,17 @@ export function getAIClient(provider: AIProvider = "groq"): OpenAI {
 
 /**
  * Gets the model name based on the provider.
+ * @param provider - The AI provider (groq or openai)
+ * @param model - Optional specific model name (for Groq: llama-3.1-8b-instant or llama-3.3-70b-versatile)
  */
-export function getModelName(provider: AIProvider = "groq"): string {
+export function getModelName(provider: AIProvider = "groq", model?: string): string {
   if (provider === "groq") {
-    return "llama-3.3-70b-versatile";
+    // If a specific model is provided and it's a valid Groq model, use it
+    if (model && (model === "llama-3.1-8b-instant" || model === "llama-3.3-70b-versatile")) {
+      return model;
+    }
+    // Default to llama-3.1-8b-instant
+    return "llama-3.1-8b-instant";
   }
   return "gpt-4o-mini";
 }

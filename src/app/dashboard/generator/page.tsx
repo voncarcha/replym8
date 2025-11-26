@@ -17,11 +17,13 @@ import { GeneratedReplySection } from "@/components/shared/generated-reply-secti
 type Mode = "reply" | "compose";
 type Length = "short" | "medium" | "long";
 type AIAgent = "groq" | "openai";
+type GroqModel = "llama-3.1-8b-instant" | "llama-3.3-70b-versatile";
 
 export default function ReplyGeneratorPage() {
   const [mode, setMode] = useState<Mode>("reply");
   const [length, setLength] = useState<Length>("short");
   const [aiAgent, setAiAgent] = useState<AIAgent>("groq");
+  const [groqModel, setGroqModel] = useState<GroqModel>("llama-3.1-8b-instant");
   const [message, setMessage] = useState("");
   const [additionalContext, setAdditionalContext] = useState("");
   const [composeMessage, setComposeMessage] = useState("");
@@ -196,6 +198,7 @@ export default function ReplyGeneratorPage() {
           emojiEnabled: effectiveEmoji,
           replyId: replyId, // Include replyId if regenerating
           aiAgent, // Include selected AI agent
+          model: aiAgent === "groq" ? groqModel : undefined, // Include model if Groq
           tonePreset: selectedTonePreset !== "match-profile" ? selectedTonePreset : undefined, // Only send if not matching profile
         }),
       });
@@ -305,6 +308,8 @@ export default function ReplyGeneratorPage() {
               onAdditionalContextChange={setAdditionalContext}
               aiAgent={aiAgent}
               onAIAgentChange={setAiAgent}
+              groqModel={groqModel}
+              onGroqModelChange={setGroqModel}
               error={error}
             />
           ) : (

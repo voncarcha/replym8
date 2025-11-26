@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       emojiEnabled,
       replyId,
       aiAgent = "groq",
+      model, // Optional: specific model name (for Groq: llama-3.1-8b-instant or llama-3.3-70b-versatile)
       tonePreset, // Optional: if provided, overrides profile tone
     } = await req.json();
 
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
     // Get the appropriate AI client based on selected provider (default: groq)
     const aiProvider = (aiAgent === "openai" ? "openai" : "groq") as AIProvider;
     const client = getAIClient(aiProvider);
-    const model = getModelName(aiProvider);
+    const modelName = getModelName(aiProvider, model);
     const supabase = createAdminClient();
 
     // Fetch the user's recent messages from generated_replies
@@ -247,7 +248,7 @@ Tags: ${profileTags.join(", ") || "None"}
 Generate the best possible reply.`;
 
     const completion = await client.chat.completions.create({
-      model,
+      model: modelName,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },

@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { AIAgentSelector } from "./ai-agent-selector";
+import { AIAgentSelector, type GroqModel } from "./ai-agent-selector";
 
 type AIAgent = "groq" | "openai";
 
@@ -12,6 +12,8 @@ interface ReplyInputSectionProps {
   onAdditionalContextChange: (value: string) => void;
   aiAgent: AIAgent;
   onAIAgentChange: (value: AIAgent) => void;
+  groqModel?: GroqModel;
+  onGroqModelChange?: (model: GroqModel) => void;
   error: string | null;
 }
 
@@ -22,6 +24,8 @@ export function ReplyInputSection({
   onAdditionalContextChange,
   aiAgent,
   onAIAgentChange,
+  groqModel,
+  onGroqModelChange,
   error,
 }: ReplyInputSectionProps) {
   return (
@@ -30,14 +34,14 @@ export function ReplyInputSection({
         <label className="text-sm font-medium text-foreground">
           Incoming message
         </label>
-        <div className="inline-flex items-center gap-2 text-sm text-foreground">
+        {/* <div className="inline-flex items-center gap-2 text-sm text-foreground">
           <span className="rounded-full bg-muted px-2 py-0.5">
             Email
           </span>
           <span className="rounded-full border border-border bg-card px-2 py-0.5">
             Chat
           </span>
-        </div>
+        </div> */}
       </div>
       <textarea
         className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-2 min-h-24 focus:outline-none focus:ring-1 focus:ring-primary"
@@ -75,7 +79,12 @@ export function ReplyInputSection({
           </div>
         )}
         <div className="flex items-center justify-between gap-3">
-          <AIAgentSelector value={aiAgent} onValueChange={onAIAgentChange} />
+          <AIAgentSelector 
+            value={aiAgent} 
+            model={groqModel}
+            onValueChange={onAIAgentChange}
+            onModelChange={onGroqModelChange}
+          />
         </div>
       </div>
     </Card>
