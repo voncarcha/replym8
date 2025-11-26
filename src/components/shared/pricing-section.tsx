@@ -15,10 +15,10 @@ export function PricingSection() {
             </p>
           </div>
           <div className="inline-flex items-center rounded-full border border-border bg-card/80 text-[0.7rem] text-foreground px-2 py-1">
-            <button className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-medium">
+            <button className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-medium cursor-pointer">
               Monthly
             </button>
-            <button className="px-2 py-0.5 text-muted-foreground">
+            <button className="px-2 py-0.5 text-muted-foreground cursor-pointer">
               Yearly <span className="ml-0.5 text-emerald-400">Save 20%</span>
             </button>
           </div>
@@ -43,7 +43,7 @@ export function PricingSection() {
                 <div className="text-right">
                   <div className="flex items-baseline gap-1 justify-end">
                     <span className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-                      $19
+                      $5
                     </span>
                     <span className="text-xs text-muted-foreground">/month</span>
                   </div>
@@ -100,7 +100,7 @@ export function PricingSection() {
               </div>
               <ul className="space-y-1.5 text-xs text-muted-foreground">
                 <li>· 15 AI replies / day</li>
-                <li>· Up to 10 recipient profiles</li>
+                <li>· Up to 5 recipient profiles</li>
                 <li>· Core generator &amp; uploads</li>
               </ul>
             </div>

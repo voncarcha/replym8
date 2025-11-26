@@ -52,7 +52,7 @@ export function ProfileFilters({ profiles }: ProfileFiltersProps) {
       <div className="flex flex-wrap gap-2 text-sm pt-4">
         <button
           onClick={() => setSelectedFilter(null)}
-          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-colors ${
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-colors cursor-pointer ${
             selectedFilter === null
               ? "bg-muted text-foreground"
               : "border border-border bg-card text-muted-foreground hover:bg-muted"
@@ -68,7 +68,7 @@ export function ProfileFilters({ profiles }: ProfileFiltersProps) {
             <button
               key={relationshipType}
               onClick={() => setSelectedFilter(relationshipType)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-colors cursor-pointer ${
                 isSelected
                   ? "bg-muted text-foreground"
                   : "border border-border bg-card text-muted-foreground hover:bg-muted"

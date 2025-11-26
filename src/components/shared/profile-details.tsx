@@ -5,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ProfileWithMembers } from "@/app/actions/profile";
 import { getInitials, formatRelativeTime } from "@/lib/utils";
+import { tonePreferencesToPresetId } from "@/lib/tone-preset-utils";
+import { getTonePresetById } from "@/lib/tone-presets";
 
 interface ProfileDetailsProps {
   profile: ProfileWithMembers;
@@ -13,6 +15,18 @@ interface ProfileDetailsProps {
 export function ProfileDetails({ profile }: ProfileDetailsProps) {
   const initials = getInitials(profile.name);
   const tonePrefs = profile.tone_preferences;
+  
+  // Get preset ID from tone preferences
+  const presetId = tonePrefs ? tonePreferencesToPresetId(tonePrefs) : null;
+  const preset = presetId ? getTonePresetById(presetId) : null;
+  
+  // Get preset tags and custom tags
+  const presetTags = preset?.tags || [];
+  const allTags = tonePrefs?.tags || [];
+  const customTags = allTags.filter((tag) => !presetTags.includes(tag));
+  
+  // Use allTags directly (already contains preset tags + custom tags from profile)
+  const displayTags = allTags;
 
   return (
     <div className="px-4 sm:px-5 pb-4 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.1fr)] overflow-y-auto pt-4">
@@ -54,44 +68,56 @@ export function ProfileDetails({ profile }: ProfileDetailsProps) {
               </div>
             </div>
 
-          {/* Tone Preferences */}
+          {/* Tone Preset */}
           <div className="space-y-2">
-            <Label className="text-sm text-muted-foreground">Tone Preferences</Label>
-            <div className="flex flex-wrap gap-2">
-              {tonePrefs.formality && (
-                <Badge variant="outline" className="text-xs text-muted-foreground">
-                  Formality: {tonePrefs.formality}
-                </Badge>
-              )}
-              {tonePrefs.friendliness && (
-                <Badge variant="outline" className="text-xs text-muted-foreground">
-                  Friendliness: {tonePrefs.friendliness}
-                </Badge>
-              )}
-              {tonePrefs.preferredLength && (
-                <Badge variant="outline" className="text-xs text-muted-foreground">
-                  Length: {tonePrefs.preferredLength}
-                </Badge>
-              )}
-              {tonePrefs.emojiUsage && (
-                <Badge variant="outline" className="text-xs text-muted-foreground">
-                  Emoji: {tonePrefs.emojiUsage}
-                </Badge>
+            <Label className="text-sm text-muted-foreground">Tone Preset</Label>
+            <div className="flex flex-wrap gap-2 items-center">
+              {preset ? (
+                <>
+                  <Badge variant="default" className="text-xs font-medium">
+                    {preset.name}
+                  </Badge>
+                  {preset.description && (
+                    <span className="text-xs text-muted-foreground">
+                      {preset.description}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-xs text-muted-foreground">No preset selected</span>
               )}
             </div>
           </div>
 
           {/* Tags */}
-          {tonePrefs.tags && tonePrefs.tags.length > 0 && (
+          {displayTags.length > 0 && (
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">Tags</Label>
               <div className="flex flex-wrap gap-1.5">
-                {tonePrefs.tags.map((tag, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-xs text-muted-foreground">
-                    {tag}
-                  </Badge>
-                ))}
+                {displayTags.map((tag, idx) => {
+                  const isPresetTag = presetTags.includes(tag);
+                  return (
+                    <Badge 
+                      key={idx} 
+                      variant={isPresetTag ? "secondary" : "outline"} 
+                      className="text-xs text-muted-foreground"
+                    >
+                      {tag}
+                    </Badge>
+                  );
+                })}
               </div>
+              {customTags.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {customTags.length} custom tag{customTags.length !== 1 ? "s" : ""} added
+                </p>
+              )}
+            </div>
+          )}
+          {displayTags.length === 0 && customTags.length === 0 && (
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Tags</Label>
+              <p className="text-xs text-muted-foreground">No tags added</p>
             </div>
           )}
 

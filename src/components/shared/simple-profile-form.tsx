@@ -41,17 +41,9 @@ import {
 import { GroupMember } from "./group-member";
 import { CreateProfileInput } from "@/types";
 import { createProfile, updateProfile, ProfileWithMembers } from "@/app/actions/profile";
+import { TONE_PRESETS, getTonePresetById } from "@/lib/tone-presets";
+import { tonePreferencesToPresetId, presetIdToTonePreferences } from "@/lib/tone-preset-utils";
 
-const SUGGESTED_TAGS = [
-  "Bullet points",
-  "Detailed",
-  "TL;DR preferred",
-  "Data-first",
-  "Weekly status",
-  "Strictly professional",
-  "Empathetic",
-  "Step-by-step"
-];
 
 export interface SimpleProfileFormHandle {
   submit: () => void;
@@ -79,15 +71,21 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
     // Prepare default values based on initialData or defaults
     const getDefaultValues = (): SimpleProfileFormData => {
       if (initialData) {
+        // Convert tone_preferences to preset ID
+        const presetId = tonePreferencesToPresetId(initialData.tone_preferences);
+        const preset = getTonePresetById(presetId);
+        
+        // Extract custom tags (tags that are not in the preset's default tags)
+        const presetTags = preset?.tags || [];
+        const allTags = initialData.tone_preferences.tags || [];
+        const customTags = allTags.filter((tag) => !presetTags.includes(tag));
+
         return {
           profileType: initialData.type === "individual" ? "Individual" : "Group",
           name: initialData.name,
           relationshipType: initialData.relationship_type,
-          formality: initialData.tone_preferences.formality,
-          friendliness: initialData.tone_preferences.friendliness,
-          preferredLength: initialData.tone_preferences.preferredLength,
-          emojiUsage: initialData.tone_preferences.emojiUsage,
-          tags: initialData.tone_preferences.tags || [],
+          tonePreset: presetId,
+          tags: customTags, // Only store custom tags in the form
           notes: initialData.notes || "",
           groupMembers: initialData.members?.map((m: { name: string; role?: string | null; email?: string | null }) => ({
             name: m.name,
@@ -100,10 +98,7 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
         profileType: "Individual",
         name: "",
         relationshipType: INDIVIDUAL_RELATIONSHIP_TYPES[0],
-        formality: "Neutral",
-        friendliness: "Neutral",
-        preferredLength: "Medium",
-        emojiUsage: "Minimal",
+        tonePreset: "professional",
         tags: [],
         notes: "",
         groupMembers: [],
@@ -122,6 +117,10 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
 
   const profileType = form.watch("profileType");
   const tags = form.watch("tags") || [];
+  const tonePreset = form.watch("tonePreset");
+  
+  // Get the selected preset to show its tags
+  const selectedPreset = getTonePresetById(tonePreset);
 
   // Reset relationship type when profile type changes
   useEffect(() => {
@@ -146,18 +145,15 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
   const onSubmit = async (data: SimpleProfileFormData) => {
     setIsSubmitting(true);
     try {
+      // Convert preset ID to tone_preferences format
+      const tonePreferences = presetIdToTonePreferences(data.tonePreset, data.tags);
+      
       // Transform form data to match database schema
       const profileData: CreateProfileInput = {
         name: data.name,
         type: data.profileType.toLowerCase() as "individual" | "group",
         relationship_type: data.relationshipType,
-        tone_preferences: {
-          formality: data.formality,
-          friendliness: data.friendliness,
-          preferredLength: data.preferredLength,
-          emojiUsage: data.emojiUsage,
-          tags: data.tags,
-        },
+        tone_preferences: tonePreferences,
         notes: data.notes || null,
       };
 
@@ -224,8 +220,11 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
 
   const handleAddCustomTag = () => {
     const trimmedTag = customTagInput.trim();
-    if (trimmedTag && !tags.includes(trimmedTag)) {
-      form.setValue("tags", [...tags, trimmedTag]);
+    if (!trimmedTag) return;
+    
+    const currentTags = form.getValues("tags") || [];
+    if (!currentTags.includes(trimmedTag)) {
+      form.setValue("tags", [...currentTags, trimmedTag], { shouldValidate: true });
       setCustomTagInput("");
     }
   };
@@ -329,220 +328,100 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
           </CardContent>
         </Card>
 
-        {/* Basic Tone Section */}
+        {/* Tone Preset Section */}
         <Card>
           <CardHeader>
             <CardTitle>Tone Preferences</CardTitle>
             <CardDescription>
-              Set the tone preferences for communication.
+              Select a tone preset for communication style.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField
               control={form.control}
-              name="formality"
+              name="tonePreset"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Formality</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex flex-row gap-6"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Formal" id="formal" />
-                        <Label htmlFor="formal" className="cursor-pointer">
-                          Formal
-                        </Label>
+                  <FormLabel>Tone Preset</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-auto min-h-12 py-2 [&>span]:truncate [&>span]:text-left">
+                        <SelectValue placeholder="Select a tone preset" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {TONE_PRESETS.map((preset) => (
+                        <SelectItem key={preset.id} value={preset.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{preset.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {preset.description}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedPreset && (
+                    <div className="mt-2">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Preset tags:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedPreset.tags.map((tag) => (
+                          <Badge key={tag} variant="outline">
+                            {tag}
+                          </Badge>
+                        ))}
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Neutral" id="neutral-formality" />
-                        <Label htmlFor="neutral-formality" className="cursor-pointer">
-                          Neutral
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Casual" id="casual" />
-                        <Label htmlFor="casual" className="cursor-pointer">
-                          Casual
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="friendliness"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Friendliness</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex flex-row gap-6"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Friendly" id="friendly" />
-                        <Label htmlFor="friendly" className="cursor-pointer">
-                          Friendly
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Neutral" id="neutral-friendliness" />
-                        <Label htmlFor="neutral-friendliness" className="cursor-pointer">
-                          Neutral
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Reserved" id="reserved" />
-                        <Label htmlFor="reserved" className="cursor-pointer">
-                          Reserved
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="preferredLength"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preferred Length</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex flex-row gap-6"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Short" id="short" />
-                        <Label htmlFor="short" className="cursor-pointer">
-                          Short
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Medium" id="medium" />
-                        <Label htmlFor="medium" className="cursor-pointer">
-                          Medium
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Long" id="long" />
-                        <Label htmlFor="long" className="cursor-pointer">
-                          Long
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="emojiUsage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Emoji Usage</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex flex-row gap-6"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="None" id="none" />
-                        <Label htmlFor="none" className="cursor-pointer">
-                          None
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Minimal" id="minimal" />
-                        <Label htmlFor="minimal" className="cursor-pointer">
-                          Minimal
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Allowed" id="allowed" />
-                        <Label htmlFor="allowed" className="cursor-pointer">
-                          Allowed
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Tags Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tags</CardTitle>
-            <CardDescription>
-              Select or add tags to describe preferences.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {SUGGESTED_TAGS.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant={tags.includes(tag) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => handleTagToggle(tag)}
+            {/* Custom Tags Section */}
+            <div className="space-y-2 pt-4 border-t">
+              <Label>Custom Tags</Label>
+              <p className="text-sm text-muted-foreground">
+                Add custom tags to further customize the tone.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add custom tag"
+                  value={customTagInput}
+                  onChange={(e) => setCustomTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddCustomTag();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddCustomTag}
                 >
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add custom tag"
-                value={customTagInput}
-                onChange={(e) => setCustomTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddCustomTag();
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAddCustomTag}
-              >
-                Add
-              </Button>
-            </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="secondary"
-                    className="cursor-pointer"
-                    onClick={() => handleTagToggle(tag)}
-                  >
-                    {tag} ×
-                  </Badge>
-                ))}
+                  Add
+                </Button>
               </div>
-            )}
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {tags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="secondary"
+                      className="cursor-pointer"
+                      onClick={() => handleTagToggle(tag)}
+                    >
+                      {tag} ×
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 

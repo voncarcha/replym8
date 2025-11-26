@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { ProfileWithMembers, getProfiles } from "@/app/actions/profile";
 import Link from "next/link";
 import { toast } from "sonner";
+import { TONE_PRESETS, getTonePresetById } from "@/lib/tone-presets";
+import { presetIdToTonePreferences } from "@/lib/tone-preset-utils";
 
 type Mode = "reply" | "compose";
 type Length = "short" | "medium" | "long";
@@ -32,6 +34,10 @@ export default function ReplyGeneratorPage() {
   const [profiles, setProfiles] = useState<ProfileWithMembers[]>([]);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
+  const [selectedTonePreset, setSelectedTonePreset] = useState<string>("casual");
+  const [isManualLength, setIsManualLength] = useState(false);
+  const [emojiEnabled, setEmojiEnabled] = useState<boolean>(false);
+  const [isManualEmoji, setIsManualEmoji] = useState(false);
 
   // Fetch profiles on mount using server action
   useEffect(() => {
@@ -52,6 +58,120 @@ export default function ReplyGeneratorPage() {
   // Get selected profile object
   const selectedProfileObj = profiles.find((p) => p.id === selectedProfile);
 
+  // Reset tone preset when profile changes
+  useEffect(() => {
+    if (selectedProfile) {
+      setSelectedTonePreset("match-profile");
+      setIsManualLength(false); // Reset manual length when profile changes to use profile's preferred length
+      setIsManualEmoji(false); // Reset manual emoji when profile changes to use profile's preference
+    } else {
+      // If no profile selected, default to casual and reset manual flags
+      setSelectedTonePreset("casual");
+      setIsManualLength(false);
+      setIsManualEmoji(false);
+    }
+  }, [selectedProfile]);
+
+  // Helper function to convert emojiUsage to boolean
+  const emojiUsageToBoolean = (emojiUsage: "None" | "Minimal" | "Allowed" | undefined): boolean => {
+    return emojiUsage === "Allowed";
+  };
+
+  // Update length and emoji when tone preset changes
+  useEffect(() => {
+    if (selectedTonePreset !== "match-profile") {
+      const preset = getTonePresetById(selectedTonePreset);
+      if (preset) {
+        const tonePrefs = presetIdToTonePreferences(selectedTonePreset, []);
+        
+        // Reset manual flags and update length/emoji immediately when preset changes
+        setIsManualLength(false);
+        setIsManualEmoji(false);
+        
+        const presetLength = tonePrefs.preferredLength.toLowerCase() as Length;
+        const presetEmoji = emojiUsageToBoolean(tonePrefs.emojiUsage);
+        
+        setLength(presetLength);
+        setEmojiEnabled(presetEmoji);
+      }
+    }
+  }, [selectedTonePreset]);
+
+  // Calculate effective length based on preset or profile, prioritizing manual selection
+  const getEffectiveLength = (): Length => {
+    // If user manually selected a length, use that
+    if (isManualLength) {
+      return length;
+    }
+
+    // If a specific preset is selected (not "match-profile"), use preset's preferred length
+    if (selectedTonePreset !== "match-profile") {
+      const preset = getTonePresetById(selectedTonePreset);
+      if (preset) {
+        const tonePrefs = presetIdToTonePreferences(selectedTonePreset, []);
+        return (tonePrefs.preferredLength.toLowerCase() as Length);
+      }
+    }
+
+    // If "match-profile" is selected and profile exists, use profile's preferred length
+    if (selectedTonePreset === "match-profile" && selectedProfileObj?.tone_preferences?.preferredLength) {
+      return (selectedProfileObj.tone_preferences.preferredLength.toLowerCase() as Length);
+    }
+
+    // Default to current length
+    return length;
+  };
+
+  // Calculate effective emoji preference based on preset or profile, prioritizing manual selection
+  const getEffectiveEmoji = (): boolean => {
+    // If user manually selected emoji preference, use that
+    if (isManualEmoji) {
+      return emojiEnabled;
+    }
+
+    // If a specific preset is selected (not "match-profile"), use preset's emoji preference
+    if (selectedTonePreset !== "match-profile") {
+      const preset = getTonePresetById(selectedTonePreset);
+      if (preset) {
+        const tonePrefs = presetIdToTonePreferences(selectedTonePreset, []);
+        return emojiUsageToBoolean(tonePrefs.emojiUsage);
+      }
+    }
+
+    // If "match-profile" is selected and profile exists, use profile's emoji preference
+    if (selectedTonePreset === "match-profile" && selectedProfileObj?.tone_preferences?.emojiUsage !== undefined) {
+      return emojiUsageToBoolean(selectedProfileObj.tone_preferences.emojiUsage);
+    }
+
+    // Default to current emoji setting
+    return emojiEnabled;
+  };
+
+  const effectiveLength = getEffectiveLength();
+  const effectiveEmoji = getEffectiveEmoji();
+
+  // Update length and emoji when profile changes (if not manually set and matching profile)
+  useEffect(() => {
+    if (selectedTonePreset === "match-profile" && selectedProfileObj?.tone_preferences) {
+      // Update length if not manually set
+      if (!isManualLength && selectedProfileObj.tone_preferences.preferredLength) {
+        const profileLength = selectedProfileObj.tone_preferences.preferredLength.toLowerCase() as Length;
+        if (profileLength !== length) {
+          setLength(profileLength);
+        }
+      }
+      
+      // Update emoji if not manually set
+      if (!isManualEmoji && selectedProfileObj.tone_preferences.emojiUsage !== undefined) {
+        const profileEmoji = emojiUsageToBoolean(selectedProfileObj.tone_preferences.emojiUsage);
+        if (profileEmoji !== emojiEnabled) {
+          setEmojiEnabled(profileEmoji);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProfileObj, isManualLength, isManualEmoji, selectedTonePreset]);
+
   const handleGenerateReply = async () => {
     if (!message.trim()) return;
 
@@ -71,8 +191,10 @@ export default function ReplyGeneratorPage() {
           additionalContext: additionalContext.trim() || undefined,
           profileId: selectedProfile,
           length,
+          emojiEnabled: effectiveEmoji,
           replyId: replyId, // Include replyId if regenerating
           aiAgent, // Include selected AI agent
+          tonePreset: selectedTonePreset !== "match-profile" ? selectedTonePreset : undefined, // Only send if not matching profile
         }),
       });
 
@@ -134,7 +256,7 @@ export default function ReplyGeneratorPage() {
               <button
                 onClick={() => setMode("reply")}
                 className={cn(
-                  "px-2 py-1 text-[0.7rem] font-medium transition-colors",
+                  "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
                   mode === "reply"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted"
@@ -145,51 +267,13 @@ export default function ReplyGeneratorPage() {
               <button
                 onClick={() => setMode("compose")}
                 className={cn(
-                  "px-2 py-1 text-[0.7rem] font-medium transition-colors",
+                  "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
                   mode === "compose"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted"
                 )}
               >
                 Compose
-              </button>
-            </div>
-          </div>
-          <div className="inline-flex items-center gap-2 text-[0.7rem] text-muted-foreground">
-            <span>Length</span>
-            <div className="inline-flex items-center rounded-full border border-border bg-card overflow-hidden">
-              <button
-                onClick={() => setLength("short")}
-                className={cn(
-                  "px-2 py-1 text-[0.7rem] font-medium transition-colors",
-                  length === "short"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
-                )}
-              >
-                Short
-              </button>
-              <button
-                onClick={() => setLength("medium")}
-                className={cn(
-                  "px-2 py-1 text-[0.7rem] font-medium transition-colors",
-                  length === "medium"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
-                )}
-              >
-                Medium
-              </button>
-              <button
-                onClick={() => setLength("long")}
-                className={cn(
-                  "px-2 py-1 text-[0.7rem] font-medium transition-colors",
-                  length === "long"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
-                )}
-              >
-                Long
               </button>
             </div>
           </div>
@@ -237,7 +321,7 @@ export default function ReplyGeneratorPage() {
                     }
                   }}
                 />
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
                     Tip: include a few lines of previous context for best results.
                   </span>
@@ -249,18 +333,18 @@ export default function ReplyGeneratorPage() {
                   </label>
                   <textarea
                     className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-2 min-h-20 focus:outline-none focus:ring-1 focus:ring-primary"
-                    placeholder="Add any additional context, intent, or specific instructions for the reply (e.g., 'I want to politely decline', 'Emphasize the deadline', 'Keep it brief and friendly')..."
+                    placeholder="Add any additional context, intent, or specific instructions for the reply (e.g., 'I want to politely decline', 'Emphasize the deadline')..."
                     value={additionalContext}
                     onChange={(e) => setAdditionalContext(e.target.value)}
                   />
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
                       Optional: provide context or intent to guide the AI reply.
                     </span>
                     <span>{additionalContext.length} / 500 chars</span>
                   </div>
                 </div>
-                <div className="flex flex-col gap-2 pt-2">
+                <div className="flex flex-col gap-2">
                   {error && (
                     <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2">
                       <p className="text-sm text-destructive">{error}</p>
@@ -268,16 +352,16 @@ export default function ReplyGeneratorPage() {
                   )}
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <label className="text-sm text-muted-foreground whitespace-nowrap">
+                      <label className="text-xs text-muted-foreground whitespace-nowrap">
                         AI Agent
                       </label>
                       <Select value={aiAgent} onValueChange={(value) => setAiAgent(value as AIAgent)}>
-                        <SelectTrigger className="w-[190px] h-8 text-sm [&>span]:truncate [&>span]:text-left">
+                        <SelectTrigger className="w-[150px] h-7 text-xs [&>span]:truncate [&>span]:text-left">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="min-w-[190px]">
-                          <SelectItem value="groq">Groq (llama-3.3-70b-versatile)</SelectItem>
-                          <SelectItem value="openai">OpenAI (gpt-4o-mini)</SelectItem>
+                        <SelectContent className="min-w-[150px]">
+                          <SelectItem value="groq" className="text-xs">Groq (llama-3.3-70b-versatile)</SelectItem>
+                          <SelectItem value="openai" className="text-xs">OpenAI (gpt-4o-mini)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -320,7 +404,7 @@ export default function ReplyGeneratorPage() {
                         value={composeTo}
                         onChange={(e) => setComposeTo(e.target.value)}
                       />
-                      <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card text-sm text-foreground px-1.5 py-0.5 hover:bg-muted transition-colors">
+                      <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card text-sm text-foreground px-1.5 py-0.5 hover:bg-muted transition-colors cursor-pointer">
                         <FolderOpen className="h-3 w-3" />
                         Profiles
                       </button>
@@ -346,11 +430,11 @@ export default function ReplyGeneratorPage() {
                     Message body
                   </span>
                   <div className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                    <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 hover:bg-muted transition-colors">
+                    <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 hover:bg-muted transition-colors cursor-pointer">
                       <List className="h-3 w-3" />
                       Outline
                     </button>
-                    <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 hover:bg-muted transition-colors">
+                    <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 hover:bg-muted transition-colors cursor-pointer">
                       <Plus className="h-3 w-3" />
                       Add points
                     </button>
@@ -360,13 +444,13 @@ export default function ReplyGeneratorPage() {
                   {/* Tiny toolbar */}
                   <div className="flex items-center justify-between border-b border-border px-2.5 py-1.5">
                     <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors">
+                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors cursor-pointer">
                         <span className="text-sm font-medium">B</span>
                       </button>
-                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors">
+                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors cursor-pointer">
                         <span className="text-sm font-medium">I</span>
                       </button>
-                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors">
+                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors cursor-pointer">
                         <span className="text-sm font-medium">•</span>
                       </button>
                     </div>
@@ -420,7 +504,7 @@ export default function ReplyGeneratorPage() {
           )}
 
           {/* Conversation upload drawer - only show in reply mode */}
-          {mode === "reply" && (
+          {/* {mode === "reply" && (
             <Card className="rounded-xl border-dashed border-border bg-card/60 p-3 sm:p-4 space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -487,7 +571,8 @@ export default function ReplyGeneratorPage() {
               )}
             </div>
           </Card>
-          )}
+          )} */}
+
         </div>
 
         {/* Right: profile-select + output - only show in reply mode */}
@@ -587,11 +672,21 @@ export default function ReplyGeneratorPage() {
                 </label>
                 <div className="inline-flex items-center gap-1 text-sm text-foreground">
                   <span>Tone</span>
-                  <select className="rounded-md border border-border bg-background text-sm text-foreground px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary">
-                    <option>Match profile</option>
-                    <option>Softer</option>
-                    <option>More direct</option>
-                  </select>
+                  <Select value={selectedTonePreset} onValueChange={setSelectedTonePreset}>
+                    <SelectTrigger className="w-[180px] h-7 text-sm [&>span]:truncate [&>span]:text-left">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="min-w-[180px]">
+                      {selectedProfile && (
+                        <SelectItem value="match-profile">Match profile</SelectItem>
+                      )}
+                      {TONE_PRESETS.map((preset) => (
+                        <SelectItem key={preset.id} value={preset.id}>
+                          {preset.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="rounded-lg border border-border bg-background/80 p-3 min-h-28">
@@ -603,7 +698,7 @@ export default function ReplyGeneratorPage() {
                     : "Generated reply will appear here after you paste a message..."}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2 justify-between items-center">
+              <div className="flex flex-wrap gap-2 items-center">
                 <div className="flex gap-2">
                   {!isReplyGenerated ? (
                     <Button
@@ -666,14 +761,87 @@ export default function ReplyGeneratorPage() {
                     </>
                   )}
                 </div>
-                <div className="inline-flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    Ready to send
-                  </span>
-                  <button className="underline underline-offset-2 hover:text-foreground">
-                    Improve opening
-                  </button>
+                <div className="inline-flex items-center gap-5 text-[0.7rem] text-muted-foreground ml-auto">
+                  <div className="inline-flex items-center gap-2">
+                    <span>Length</span>
+                    <div className="inline-flex items-center rounded-full border border-border bg-card overflow-hidden">
+                    <button
+                      onClick={() => {
+                        setLength("short");
+                        setIsManualLength(true);
+                      }}
+                      className={cn(
+                        "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
+                        effectiveLength === "short"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      Short
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLength("medium");
+                        setIsManualLength(true);
+                      }}
+                      className={cn(
+                        "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
+                        effectiveLength === "medium"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      Medium
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLength("long");
+                        setIsManualLength(true);
+                      }}
+                      className={cn(
+                        "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
+                        effectiveLength === "long"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      Long
+                    </button>
+                    </div>
+                  </div>
+                  <div className="inline-flex items-center gap-2">
+                    <span>Emoji</span>
+                    <div className="inline-flex items-center rounded-full border border-border bg-card overflow-hidden">
+                    <button
+                      onClick={() => {
+                        setEmojiEnabled(false);
+                        setIsManualEmoji(true);
+                      }}
+                      className={cn(
+                        "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
+                        !effectiveEmoji
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      No
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEmojiEnabled(true);
+                        setIsManualEmoji(true);
+                      }}
+                      className={cn(
+                        "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
+                        effectiveEmoji
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      Yes
+                    </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -684,7 +852,7 @@ export default function ReplyGeneratorPage() {
                 <Info className="mt-0.5 h-3.5 w-3.5 text-sky-400 shrink-0" />
                 <p>
                   ReplyM8 keeps this reply aligned with {selectedProfileObj.name}&apos;s profile and
-                  similar past threads. You can still tweak tone or length before
+                  similar past threads. You can still tweak tone, length or emoji usage before
                   copying.
                 </p>
               </Card>

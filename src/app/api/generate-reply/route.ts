@@ -6,6 +6,8 @@ import {
   type AIProvider,
 } from "@/lib/openai-client";
 import { createAdminClient } from "@/utils/supabase/server";
+import { getTonePresetById } from "@/lib/tone-presets";
+import { presetIdToTonePreferences } from "@/lib/tone-preset-utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,8 +22,10 @@ export async function POST(req: NextRequest) {
       additionalContext,
       profileId,
       length,
+      emojiEnabled,
       replyId,
       aiAgent = "groq",
+      tonePreset, // Optional: if provided, overrides profile tone
     } = await req.json();
 
     if (!message || typeof message !== "string") {
@@ -120,8 +124,25 @@ export async function POST(req: NextRequest) {
     // Get profile information if profileId is provided
     let profileContext = "";
     let profilePreferredLength: string | null = null;
+    let profileEmojiUsage: "None" | "Minimal" | "Allowed" | null = null;
     let profileTags: string[] = [];
     let tone = "";
+    let llmInstruction = "";
+
+    // If tonePreset is provided, use it to override profile tone
+    let effectiveTonePrefs = null;
+    if (tonePreset && tonePreset !== "match-profile") {
+      const preset = getTonePresetById(tonePreset);
+      if (preset) {
+        // Convert preset to tone preferences format
+        effectiveTonePrefs = presetIdToTonePreferences(tonePreset, []);
+        profilePreferredLength = effectiveTonePrefs.preferredLength || null;
+        profileEmojiUsage = effectiveTonePrefs.emojiUsage || null;
+        profileTags = effectiveTonePrefs.tags || [];
+        llmInstruction = preset.llmInstruction;
+        tone = `${effectiveTonePrefs.formality}, ${effectiveTonePrefs.friendliness}`;
+      }
+    }
 
     if (profileId) {
       const { data: profile } = await supabase
@@ -131,17 +152,26 @@ export async function POST(req: NextRequest) {
         .eq("user_id", userId)
         .single();
 
-      if (profile && profile.tone_preferences) {
-        const tonePrefs = profile.tone_preferences;
-        profilePreferredLength = tonePrefs.preferredLength || null;
-        profileTags = tonePrefs.tags || [];
+      if (profile) {
+        // Use preset override if provided, otherwise use profile tone_preferences
+        const tonePrefs = effectiveTonePrefs || profile.tone_preferences;
+        
+        if (tonePrefs) {
+          profilePreferredLength = tonePrefs.preferredLength || null;
+          profileEmojiUsage = tonePrefs.emojiUsage || null;
+          profileTags = tonePrefs.tags || [];
 
-        // Construct tone string from formality and friendliness
-        const formality = tonePrefs.formality || "Not specified";
-        const friendliness = tonePrefs.friendliness || "Not specified";
-        tone = `${formality}, ${friendliness}`;
+          // Construct tone string from formality and friendliness
+          const formality = tonePrefs.formality || "Not specified";
+          const friendliness = tonePrefs.friendliness || "Not specified";
+          tone = `${formality}, ${friendliness}`;
 
-        profileContext = `
+          // Use LLM instruction from preset if override is active, otherwise construct from preferences
+          if (!llmInstruction) {
+            llmInstruction = `Maintain a ${formality.toLowerCase()} and ${friendliness.toLowerCase()} tone.`;
+          }
+
+          profileContext = `
 Profile: ${profile.name}
 Relationship: ${profile.relationship_type}
 Tone Preferences:
@@ -151,12 +181,13 @@ Tone Preferences:
 - Emoji Usage: ${tonePrefs.emojiUsage || "Not specified"}
 ${profileTags.length > 0 ? `- Tags: ${profileTags.join(", ")}` : ""}
 ${profile.notes ? `Notes: ${profile.notes}` : ""}`;
-      } else if (profile) {
-        profileContext = `
+        } else {
+          profileContext = `
 Profile: ${profile.name}
 Relationship: ${profile.relationship_type}
 ${profile.notes ? `Notes: ${profile.notes}` : ""}`;
-        tone = "Not specified";
+          tone = "Not specified";
+        }
       }
     } else {
       tone = "Not specified";
@@ -167,6 +198,11 @@ ${profile.notes ? `Notes: ${profile.notes}` : ""}`;
     const effectiveLength = profilePreferredLength
       ? (profilePreferredLength.toLowerCase() as "short" | "medium" | "long")
       : length;
+
+    // Use emojiEnabled from request if provided, otherwise derive from profile
+    const effectiveEmojiEnabled = emojiEnabled !== undefined 
+      ? emojiEnabled 
+      : (profileEmojiUsage === "Allowed");
 
     // Use history-aware system prompt for both Groq and OpenAI
     const systemPrompt = `You are ReplyMate AI, a personalized reply generator.
@@ -186,6 +222,8 @@ Rules for using past messages:
 6. Maintain consistent tone with previous user interactions.
 7. Generate a reply that matches the requested tone, length, and tags.
 ${profileContext ? `\n\nProfile context:${profileContext}` : ""}
+${llmInstruction ? `\n\nTone instruction: ${llmInstruction}` : ""}
+${effectiveEmojiEnabled ? "\n\nEmoji usage: You may use emojis appropriately in the reply." : "\n\nEmoji usage: Do not use emojis in the reply."}
 
 ALWAYS output only the ready-to-send reply message. No explanations.`;
 
@@ -203,6 +241,7 @@ Here are the user's settings:
 
 Tone: ${tone}
 Length: ${effectiveLength}
+Emoji: ${effectiveEmojiEnabled ? "Allowed" : "Not allowed"}
 Tags: ${profileTags.join(", ") || "None"}
 
 Generate the best possible reply.`;

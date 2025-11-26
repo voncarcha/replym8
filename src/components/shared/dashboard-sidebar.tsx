@@ -22,8 +22,8 @@ import { useThemeStore, useProfileStore } from "@/lib/store";
 const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/dashboard/profiles", label: "Profiles", icon: Folder },
-  { href: "/dashboard/conversations", label: "Conversations", icon: MessageSquare },
   { href: "/dashboard/generator", label: "Generator", icon: Sparkles },
+  { href: "/dashboard/conversations", label: "Conversations", icon: MessageSquare },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
@@ -77,7 +77,7 @@ export function DashboardSidebar() {
           <ThemeToggle />
           <button
             onClick={toggleMenu}
-            className="inline-flex lg:hidden items-center gap-1.5 rounded-lg border border-border bg-card text-[0.8125rem] text-foreground px-2 py-1 hover:bg-muted transition-colors"
+            className="inline-flex lg:hidden items-center gap-1.5 rounded-lg border border-border bg-card text-[0.8125rem] text-foreground px-2 py-1 hover:bg-muted transition-colors cursor-pointer"
             aria-label="Toggle menu"
             aria-expanded={isMenuOpen}
           >
@@ -133,11 +133,11 @@ export function DashboardSidebar() {
                   {profileCount !== null ? profileCount : "..."}
                 </span>
               )}
-              {item.href === "/dashboard/conversations" && (
-                <span className="text-[0.75rem] text-muted-foreground">+ Upload</span>
-              )}
               {item.href === "/dashboard/generator" && (
                 <span className="text-[0.75rem] text-muted-foreground">Active</span>
+              )}
+              {item.href === "/dashboard/conversations" && (
+                <span className="text-[0.75rem] text-muted-foreground">+ Upload</span>
               )}
               {item.href === "/dashboard/settings" && (
                 <span className="text-[0.75rem] text-muted-foreground">Plan</span>

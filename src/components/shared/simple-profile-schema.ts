@@ -34,15 +34,25 @@ const GROUP_RELATIONSHIP_TYPES = [
   "Other"
 ] as const;
 
+const TONE_PRESET_IDS = [
+  "professional",
+  "friendly",
+  "formal",
+  "casual",
+  "empathetic",
+  "direct",
+  "short-snappy",
+  "playful",
+  "supportive-leadership",
+  "academic",
+] as const;
+
 export const simpleProfileSchema = z
   .object({
     profileType: z.enum(["Individual", "Group"]),
     name: z.string().min(1, "Name is required"),
     relationshipType: z.string(),
-    formality: z.enum(["Formal", "Neutral", "Casual"]),
-    friendliness: z.enum(["Friendly", "Neutral", "Reserved"]),
-    preferredLength: z.enum(["Short", "Medium", "Long"]),
-    emojiUsage: z.enum(["None", "Minimal", "Allowed"]),
+    tonePreset: z.enum(TONE_PRESET_IDS),
     tags: z.array(z.string()),
     notes: z.string().optional(),
   groupMembers: z

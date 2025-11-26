@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { ProfileWithMembers } from "@/app/actions/profile";
 import { formatRelativeTime, getInitials } from "@/lib/utils";
 import { DeleteProfileButton } from "@/components/shared/delete-profile-button";
+import { EditProfileButton } from "@/components/shared/edit-profile-button";
+import { tonePreferencesToPresetId } from "@/lib/tone-preset-utils";
+import { getTonePresetById } from "@/lib/tone-presets";
 
 interface ProfileListProps {
   profiles: ProfileWithMembers[];
@@ -34,7 +37,14 @@ export function ProfileList({ profiles, allProfilesCount, onProfileDeleted }: Pr
         const initials = getInitials(profile.name);
         const relationshipType = profile.relationship_type || "Other";
         const tonePrefs = profile.tone_preferences;
-        const tags = tonePrefs?.tags || [];
+        
+        // Get preset ID from tone preferences
+        const presetId = tonePrefs ? tonePreferencesToPresetId(tonePrefs) : null;
+        const preset = presetId ? getTonePresetById(presetId) : null;
+        
+        // Use allTags directly (already contains preset tags + custom tags from profile)
+        const allTags = tonePrefs?.tags || [];
+        const displayTags = allTags;
 
         // Build display name
         let displayName = profile.name;
@@ -74,32 +84,22 @@ export function ProfileList({ profiles, allProfilesCount, onProfileDeleted }: Pr
                     {relationshipType}
                   </span>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {tonePrefs?.formality && (
-                    <Badge variant="outline" className="text-xs text-muted-foreground">
-                      Formality: {tonePrefs.formality}
+                <div className="mt-1 flex flex-wrap gap-1.5 items-center">
+                  {preset && (
+                    <Badge variant="default" className="text-xs font-medium">
+                      {preset.name}
                     </Badge>
                   )}
-                  {tonePrefs?.friendliness && (
-                    <Badge variant="outline" className="text-xs text-muted-foreground">
-                      Friendliness: {tonePrefs.friendliness}
-                    </Badge>
-                  )}
-                  {tonePrefs?.preferredLength && (
-                    <Badge variant="outline" className="text-xs text-muted-foreground">
-                      Length: {tonePrefs.preferredLength}
-                    </Badge>
-                  )}
-                  {tonePrefs?.emojiUsage && (
-                    <Badge variant="outline" className="text-xs text-muted-foreground">
-                      Emoji: {tonePrefs.emojiUsage}
-                    </Badge>
-                  )}
-                  {tags.slice(0, 3).map((tag, idx) => (
+                  {displayTags.slice(0, 5).map((tag, idx) => (
                     <Badge key={idx} variant="secondary" className="text-xs text-muted-foreground">
                       {tag}
                     </Badge>
                   ))}
+                  {displayTags.length > 5 && (
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      +{displayTags.length - 5} more
+                    </Badge>
+                  )}
                 </div>
               </div>
             </Link>
@@ -116,6 +116,12 @@ export function ProfileList({ profiles, allProfilesCount, onProfileDeleted }: Pr
                     View details
                   </span>
                 </Link>
+                <EditProfileButton
+                  profile={profile}
+                  variant="icon-only"
+                  size="sm"
+                  onSuccess={onProfileDeleted}
+                />
                 <DeleteProfileButton
                   profileId={profile.id}
                   profileName={profile.name}

@@ -77,7 +77,7 @@ Your name"
               <span className="text-foreground font-medium">
                 Data &amp; privacy
               </span>
-              <button className="text-[0.8125rem] text-sky-400 hover:text-sky-300">
+              <button className="text-[0.8125rem] text-sky-400 hover:text-sky-300 cursor-pointer">
                 Open policy
               </button>
             </div>
