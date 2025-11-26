@@ -9,9 +9,14 @@ import { useMemo } from "react";
 interface ConversationListProps {
   replies: GeneratedReplyWithProfile[];
   filterProfileId: string | null;
+  onItemClick?: (reply: GeneratedReplyWithProfile) => void;
 }
 
-export function ConversationList({ replies, filterProfileId }: ConversationListProps) {
+export function ConversationList({
+  replies,
+  filterProfileId,
+  onItemClick,
+}: ConversationListProps) {
   const filteredReplies = useMemo(() => {
     if (!filterProfileId) {
       return replies;
@@ -44,7 +49,11 @@ export function ConversationList({ replies, filterProfileId }: ConversationListP
   return (
     <div className="space-y-2">
       {filteredReplies.map((reply) => (
-        <ConversationItem key={reply.id} reply={reply} />
+        <ConversationItem
+          key={reply.id}
+          reply={reply}
+          onClick={() => onItemClick?.(reply)}
+        />
       ))}
     </div>
   );

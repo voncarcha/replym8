@@ -4,13 +4,6 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Form,
   FormControl,
   FormField,
@@ -248,14 +241,14 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
         id="simple-profile-form"
       >
         {/* Identity Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Identity</CardTitle>
-            <CardDescription>
+        <div className="space-y-4 pb-6 border-b">
+          <div className="space-y-1.5">
+            <h3 className="text-base font-semibold tracking-tight">Identity</h3>
+            <p className="text-sm text-muted-foreground">
               Provide basic information about the profile.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </p>
+          </div>
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="profileType"
@@ -325,18 +318,18 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
                 </FormItem>
               )}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Tone Preset Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tone Preferences</CardTitle>
-            <CardDescription>
+        <div className="space-y-4 pb-6 border-b">
+          <div className="space-y-3.5">
+            <h3 className="text-base font-semibold tracking-tight">Tone Preferences</h3>
+            <p className="text-sm text-muted-foreground">
               Select a tone preset for communication style.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </p>
+          </div>
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="tonePreset"
@@ -422,18 +415,18 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Notes Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Notes</CardTitle>
-            <CardDescription>
+        <div className="space-y-4 pb-6 border-b">
+          <div className="space-y-3.5">
+            <h3 className="text-base font-semibold tracking-tight">Notes</h3>
+            <p className="text-sm text-muted-foreground">
               Add any additional notes or context about this profile.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
+          </div>
+          <div>
             <FormField
               control={form.control}
               name="notes"
@@ -450,19 +443,19 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
                 </FormItem>
               )}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Group Members Section */}
         {profileType === "Group" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Group Members</CardTitle>
-              <CardDescription>
+          <div className="space-y-4 pb-6 border-b">
+            <div className="space-y-3.5">
+              <h3 className="text-base font-semibold tracking-tight">Group Members</h3>
+              <p className="text-sm text-muted-foreground">
                 Add members to this group profile.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </p>
+            </div>
+            <div className="space-y-4">
               {fields.map((field, index) => (
                 <GroupMember
                   key={field.id}
@@ -478,8 +471,8 @@ export const SimpleProfileForm = forwardRef<SimpleProfileFormHandle, SimpleProfi
               >
                 Add Member
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
       </form>

@@ -3,7 +3,12 @@ import { MessageSquare } from "lucide-react";
 import { GeneratedReplyWithProfile } from "@/types";
 import { formatTimeAgo } from "@/lib/date-utils";
 
-export function ConversationItem({ reply }: ConversationItemProps) {
+interface ConversationItemProps {
+  reply: GeneratedReplyWithProfile;
+  onClick?: () => void;
+}
+
+export function ConversationItem({ reply, onClick }: ConversationItemProps) {
   const promptPayload = reply.prompt_payload as {
     message?: string;
     additionalContext?: string;
@@ -20,7 +25,10 @@ export function ConversationItem({ reply }: ConversationItemProps) {
   const timeAgo = formatTimeAgo(new Date(reply.created_at));
 
   return (
-    <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 flex items-start gap-3 hover:bg-muted/50 transition-colors cursor-pointer">
+    <Card
+      onClick={onClick}
+      className="rounded-xl border-border bg-card/80 p-3 sm:p-4 flex items-start gap-3 hover:bg-muted/50 transition-colors cursor-pointer"
+    >
       <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
         <MessageSquare className="h-4 w-4 text-muted-foreground" />
       </div>

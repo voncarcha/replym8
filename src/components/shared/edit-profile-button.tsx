@@ -84,10 +84,7 @@ export function EditProfileButton({
           {variant === "default" && "Edit profile"}
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="fixed inset-y-0 right-0 left-auto h-full w-full sm:w-[600px] mt-0 rounded-none sm:rounded-l-lg border-l border-t-0 border-b-0 flex flex-col">
-        <div className="hidden">
-          {/* Hide the default drag handle */}
-        </div>
+      <DrawerContent className="fixed inset-y-0 right-0 left-auto h-full w-full sm:w-[600px] mt-0 rounded-none sm:rounded-l-lg border-l border-t-0 border-b-0 flex flex-col [&>div:first-child]:hidden">
         <DrawerHeader className="border-b shrink-0">
           <DrawerTitle>Edit Profile</DrawerTitle>
           <DrawerDescription>
