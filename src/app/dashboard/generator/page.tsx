@@ -59,7 +59,6 @@ export default function ReplyGeneratorPage() {
     setError(null);
     setIsReplyGenerated(false);
     const isRegenerating = replyId !== null;
-    toast.loading(isRegenerating ? "Regenerating reply..." : "Generating reply...", { id: "generating-reply" });
 
     try {
       const response = await fetch("/api/generate-reply", {
@@ -89,12 +88,12 @@ export default function ReplyGeneratorPage() {
       if (data.replyId) {
         setReplyId(data.replyId);
       }
-      toast.success(isRegenerating ? "Reply regenerated successfully!" : "Reply generated successfully!", { id: "generating-reply" });
+      toast.success(isRegenerating ? "Reply regenerated successfully!" : "Reply generated successfully!");
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An unexpected error occurred";
       setError(errorMessage);
-      toast.error(errorMessage, { id: "generating-reply" });
+      toast.error(errorMessage);
       console.error("Error generating reply:", err);
     } finally {
       setIsGenerating(false);
@@ -246,7 +245,7 @@ export default function ReplyGeneratorPage() {
                 </div>
                 <div className="space-y-2 pt-4 border-t border-border">
                   <label className="text-sm font-medium text-foreground block">
-                    Additional context & intent
+                    Response instructions
                   </label>
                   <textarea
                     className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-2 min-h-20 focus:outline-none focus:ring-1 focus:ring-primary"
@@ -282,24 +281,6 @@ export default function ReplyGeneratorPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={handleGenerateReply}
-                      disabled={!message.trim() || isGenerating}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-3 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-3.5 w-3.5" />
-                          Generate reply
-                        </>
-                      )}
-                    </Button>
                   </div>
                 </div>
               </Card>
@@ -624,43 +605,66 @@ export default function ReplyGeneratorPage() {
               </div>
               <div className="flex flex-wrap gap-2 justify-between items-center">
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={handleCopyToClipboard}
-                    disabled={!isReplyGenerated || !generatedReply}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-2.5 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isCopied ? (
-                      <>
-                        <Check className="h-3.5 w-3.5" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3.5 w-3.5" />
-                        Copy
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleGenerateReply}
-                    disabled={!message.trim() || isGenerating}
-                    className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Regenerating...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        Regenerate
-                      </>
-                    )}
-                  </Button>
+                  {!isReplyGenerated ? (
+                    <Button
+                      size="sm"
+                      onClick={handleGenerateReply}
+                      disabled={!message.trim() || isGenerating}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-3 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-3.5 w-3.5" />
+                          Generate reply
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={handleCopyToClipboard}
+                        disabled={!isReplyGenerated || !generatedReply}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-2.5 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isCopied ? (
+                          <>
+                            <Check className="h-3.5 w-3.5" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3.5 w-3.5" />
+                            Copy
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateReply}
+                        disabled={!message.trim() || isGenerating}
+                        className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isGenerating ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Regenerating...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            Regenerate
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
                 </div>
                 <div className="inline-flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
