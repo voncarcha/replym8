@@ -1,16 +1,18 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, RefreshCw, Info, Send, Plus, FolderOpen, List, Loader2, Check } from "lucide-react";
+import { Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { ProfileWithMembers, getProfiles } from "@/app/actions/profile";
-import Link from "next/link";
 import { toast } from "sonner";
-import { TONE_PRESETS, getTonePresetById } from "@/lib/tone-presets";
+import { getTonePresetById } from "@/lib/tone-presets";
 import { presetIdToTonePreferences } from "@/lib/tone-preset-utils";
+import { ModeToggle } from "@/components/shared/mode-toggle";
+import { ReplyInputSection } from "@/components/shared/reply-input-section";
+import { ComposeInputSection } from "@/components/shared/compose-input-section";
+import { ProfileSelector } from "@/components/shared/profile-selector";
+import { GeneratedReplySection } from "@/components/shared/generated-reply-section";
 
 type Mode = "reply" | "compose";
 type Length = "short" | "medium" | "long";
@@ -237,6 +239,36 @@ export default function ReplyGeneratorPage() {
     }
   };
 
+  const handleLengthChange = (newLength: Length) => {
+    setLength(newLength);
+    setIsManualLength(true);
+  };
+
+  const handleEmojiChange = (enabled: boolean) => {
+    setEmojiEnabled(enabled);
+    setIsManualEmoji(true);
+  };
+
+  const handleMessageChange = (value: string) => {
+    setMessage(value);
+    // Reset generated reply when message changes
+    if (isReplyGenerated) {
+      setIsReplyGenerated(false);
+      setGeneratedReply("");
+      setReplyId(null); // Reset reply ID when message changes
+    }
+  };
+
+  const handleProfileChange = (profileId: string | null) => {
+    setSelectedProfile(profileId);
+    // Reset generated reply when profile changes
+    if (isReplyGenerated) {
+      setIsReplyGenerated(false);
+      setGeneratedReply("");
+      setReplyId(null);
+    }
+  };
+
   return (
     <>
       {/* Header */}
@@ -250,33 +282,7 @@ export default function ReplyGeneratorPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-5">
-          <div className="inline-flex items-center gap-2 text-[0.7rem] text-muted-foreground">
-            <span>Mode</span>
-            <div className="inline-flex items-center rounded-full border border-border bg-card overflow-hidden">
-              <button
-                onClick={() => setMode("reply")}
-                className={cn(
-                  "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
-                  mode === "reply"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
-                )}
-              >
-                Reply
-              </button>
-              <button
-                onClick={() => setMode("compose")}
-                className={cn(
-                  "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
-                  mode === "compose"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
-                )}
-              >
-                Compose
-              </button>
-            </div>
-          </div>
+          <ModeToggle mode={mode} onModeChange={setMode} />
         </div>
       </div>
 
@@ -292,215 +298,24 @@ export default function ReplyGeneratorPage() {
         {/* Left: input */}
         <div className="space-y-3">
           {mode === "reply" ? (
-            <>
-              <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-foreground">
-                    Incoming message
-                  </label>
-                  <div className="inline-flex items-center gap-2 text-sm text-foreground">
-                    <span className="rounded-full bg-muted px-2 py-0.5">
-                      Email
-                    </span>
-                    <span className="rounded-full border border-border bg-card px-2 py-0.5">
-                      Chat
-                    </span>
-                  </div>
-                </div>
-                <textarea
-                  className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-2 min-h-24 focus:outline-none focus:ring-1 focus:ring-primary"
-                  placeholder="Paste the message you need to reply to..."
-                  value={message}
-                  onChange={(e) => {
-                    setMessage(e.target.value);
-                    // Reset generated reply when message changes
-                    if (isReplyGenerated) {
-                      setIsReplyGenerated(false);
-                      setGeneratedReply("");
-                      setReplyId(null); // Reset reply ID when message changes
-                    }
-                  }}
-                />
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>
-                    Tip: include a few lines of previous context for best results.
-                  </span>
-                  <span>{message.length} / 2,000 chars</span>
-                </div>
-                <div className="space-y-2 pt-4 border-t border-border">
-                  <label className="text-sm font-medium text-foreground block">
-                    Response instructions
-                  </label>
-                  <textarea
-                    className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-2 min-h-20 focus:outline-none focus:ring-1 focus:ring-primary"
-                    placeholder="Add any additional context, intent, or specific instructions for the reply (e.g., 'I want to politely decline', 'Emphasize the deadline')..."
-                    value={additionalContext}
-                    onChange={(e) => setAdditionalContext(e.target.value)}
-                  />
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      Optional: provide context or intent to guide the AI reply.
-                    </span>
-                    <span>{additionalContext.length} / 500 chars</span>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {error && (
-                    <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2">
-                      <p className="text-sm text-destructive">{error}</p>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-muted-foreground whitespace-nowrap">
-                        AI Agent
-                      </label>
-                      <Select value={aiAgent} onValueChange={(value) => setAiAgent(value as AIAgent)}>
-                        <SelectTrigger className="w-[150px] h-7 text-xs [&>span]:truncate [&>span]:text-left">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="min-w-[150px]">
-                          <SelectItem value="groq" className="text-xs">Groq (llama-3.3-70b-versatile)</SelectItem>
-                          <SelectItem value="openai" className="text-xs">OpenAI (gpt-4o-mini)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </>
+            <ReplyInputSection
+              message={message}
+              onMessageChange={handleMessageChange}
+              additionalContext={additionalContext}
+              onAdditionalContextChange={setAdditionalContext}
+              aiAgent={aiAgent}
+              onAIAgentChange={setAiAgent}
+              error={error}
+            />
           ) : (
-            <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Compose new message
-                  </label>
-                  <span className="text-sm text-muted-foreground">
-                    Start from scratch with AI help.
-                  </span>
-                </div>
-                <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="rounded-full border border-border bg-card px-2 py-0.5">
-                    Email
-                  </span>
-                  <span className="rounded-full border border-border bg-card px-2 py-0.5">
-                    DM
-                  </span>
-                </div>
-              </div>
-              {/* To / Subject row */}
-              <div className="space-y-2">
-                <div className="grid gap-2 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1.1fr)]">
-                  <div>
-                    <label className="block text-muted-foreground text-sm">
-                      To
-                    </label>
-                    <div className="mt-1 flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-1.5">
-                      <input
-                        type="text"
-                        className="flex-1 bg-transparent text-sm text-foreground focus:outline-none placeholder:text-muted-foreground"
-                        placeholder="lena@company.com or pick from profiles"
-                        value={composeTo}
-                        onChange={(e) => setComposeTo(e.target.value)}
-                      />
-                      <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card text-sm text-foreground px-1.5 py-0.5 hover:bg-muted transition-colors cursor-pointer">
-                        <FolderOpen className="h-3 w-3" />
-                        Profiles
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-muted-foreground text-sm">
-                      Subject
-                    </label>
-                    <input
-                      className="mt-1 w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="Roadmap risks for tomorrow's exec review"
-                      value={composeSubject}
-                      onChange={(e) => setComposeSubject(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* Compose body with toolbar */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Message body
-                  </span>
-                  <div className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                    <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 hover:bg-muted transition-colors cursor-pointer">
-                      <List className="h-3 w-3" />
-                      Outline
-                    </button>
-                    <button className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 hover:bg-muted transition-colors cursor-pointer">
-                      <Plus className="h-3 w-3" />
-                      Add points
-                    </button>
-                  </div>
-                </div>
-                <div className="rounded-lg border border-border bg-card/80">
-                  {/* Tiny toolbar */}
-                  <div className="flex items-center justify-between border-b border-border px-2.5 py-1.5">
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors cursor-pointer">
-                        <span className="text-sm font-medium">B</span>
-                      </button>
-                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors cursor-pointer">
-                        <span className="text-sm font-medium">I</span>
-                      </button>
-                      <button className="inline-flex items-center justify-center h-5 w-5 rounded border border-border bg-background hover:bg-muted transition-colors cursor-pointer">
-                        <span className="text-sm font-medium">•</span>
-                      </button>
-                    </div>
-                    <div className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                      <List className="h-3 w-3" />
-                      <span>Plain</span>
-                    </div>
-                  </div>
-                  <textarea
-                    className="w-full rounded-b-lg bg-transparent text-sm text-foreground px-2.5 py-2 min-h-24 focus:outline-none focus:ring-0"
-                    placeholder="Draft what you want to say, or leave a rough idea and let ReplyM8 tighten it up."
-                    value={composeMessage}
-                    onChange={(e) => setComposeMessage(e.target.value)}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>
-                    Hint: describe intent (status update, ask, follow-up) for
-                    sharper drafts.
-                  </span>
-                  <span>{composeMessage.length} / 2,000 chars</span>
-                </div>
-              </div>
-              {/* Compose actions */}
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex gap-1.5">
-                  <Button
-                    size="sm"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-3 py-1.5 hover:bg-primary/90 h-auto"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                    Generate message
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-3 py-1.5 hover:bg-muted h-auto"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Improve draft
-                  </Button>
-                </div>
-                <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    Compose mode ready
-                  </span>
-                </div>
-              </div>
-            </Card>
+            <ComposeInputSection
+              composeTo={composeTo}
+              onComposeToChange={setComposeTo}
+              composeSubject={composeSubject}
+              onComposeSubjectChange={setComposeSubject}
+              composeMessage={composeMessage}
+              onComposeMessageChange={setComposeMessage}
+            />
           )}
 
           {/* Conversation upload drawer - only show in reply mode */}
@@ -578,273 +393,29 @@ export default function ReplyGeneratorPage() {
         {/* Right: profile-select + output - only show in reply mode */}
         {mode === "reply" && (
           <div className="space-y-3">
-            <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-foreground">
-                  Recipient profile
-                </label>
-                <Button
-                  variant="outline"
-                  asChild
-                  className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto"
-                >
-                  <Link href="/dashboard/profiles">Manage profiles</Link>
-                </Button>
-              </div>
-              <select
-                className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                value={selectedProfile || ""}
-                onChange={(e) => {
-                  setSelectedProfile(e.target.value || null);
-                  // Reset generated reply when profile changes
-                  if (isReplyGenerated) {
-                    setIsReplyGenerated(false);
-                    setGeneratedReply("");
-                    setReplyId(null);
-                  }
-                }}
-                disabled={isLoadingProfiles}
-              >
-                <option value="">Select a profile (optional)</option>
-                {profiles.map((profile) => {
-                  // Build display name similar to profile-list.tsx
-                  let displayName = profile.name;
-                  if (
-                    profile.type === "group" &&
-                    profile.members &&
-                    profile.members.length > 0
-                  ) {
-                    const memberNames = profile.members
-                      .slice(0, 2)
-                      .map((m) => m.name)
-                      .join(", ");
-                    if (profile.members.length > 2) {
-                      displayName = `${profile.name} · ${memberNames} +${
-                        profile.members.length - 2
-                      }`;
-                    } else {
-                      displayName = `${profile.name} · ${memberNames}`;
-                    }
-                  }
-                  const relationshipType = profile.relationship_type || "Other";
-                  return (
-                    <option key={profile.id} value={profile.id}>
-                      {displayName} ({relationshipType})
-                    </option>
-                  );
-                })}
-              </select>
-              {selectedProfileObj && selectedProfileObj.tone_preferences && (
-                <div className="flex flex-wrap gap-1.5 text-[0.8125rem] text-foreground">
-                  {selectedProfileObj.tone_preferences.formality && (
-                    <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
-                      {selectedProfileObj.tone_preferences.formality}
-                    </span>
-                  )}
-                  {selectedProfileObj.tone_preferences.preferredLength && (
-                    <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
-                      {selectedProfileObj.tone_preferences.preferredLength} replies
-                    </span>
-                  )}
-                  {selectedProfileObj.tone_preferences.emojiUsage === "None" && (
-                    <span className="rounded-full bg-background/80 border border-border px-2 py-0.5">
-                      No emojis
-                    </span>
-                  )}
-                  {selectedProfileObj.tone_preferences.tags &&
-                    selectedProfileObj.tone_preferences.tags.length > 0 &&
-                    selectedProfileObj.tone_preferences.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full bg-background/80 border border-border px-2 py-0.5"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                </div>
-              )}
-            </Card>
+            <ProfileSelector
+              profiles={profiles}
+              selectedProfile={selectedProfile}
+              onProfileChange={handleProfileChange}
+              isLoadingProfiles={isLoadingProfiles}
+            />
 
-            <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-foreground">
-                  Generated reply
-                </label>
-                <div className="inline-flex items-center gap-1 text-sm text-foreground">
-                  <span>Tone</span>
-                  <Select value={selectedTonePreset} onValueChange={setSelectedTonePreset}>
-                    <SelectTrigger className="w-[180px] h-7 text-sm [&>span]:truncate [&>span]:text-left">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="min-w-[180px]">
-                      {selectedProfile && (
-                        <SelectItem value="match-profile">Match profile</SelectItem>
-                      )}
-                      {TONE_PRESETS.map((preset) => (
-                        <SelectItem key={preset.id} value={preset.id}>
-                          {preset.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="rounded-lg border border-border bg-background/80 p-3 min-h-28">
-                <p className="text-sm text-foreground whitespace-pre-wrap">
-                  {isReplyGenerated
-                    ? generatedReply
-                    : message
-                    ? "Click 'Generate reply' to create a response..."
-                    : "Generated reply will appear here after you paste a message..."}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2 items-center">
-                <div className="flex gap-2">
-                  {!isReplyGenerated ? (
-                    <Button
-                      size="sm"
-                      onClick={handleGenerateReply}
-                      disabled={!message.trim() || isGenerating}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-3 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-3.5 w-3.5" />
-                          Generate reply
-                        </>
-                      )}
-                    </Button>
-                  ) : (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={handleCopyToClipboard}
-                        disabled={!isReplyGenerated || !generatedReply}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-2.5 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isCopied ? (
-                          <>
-                            <Check className="h-3.5 w-3.5" />
-                            Copied!
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5" />
-                            Copy
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleGenerateReply}
-                        disabled={!message.trim() || isGenerating}
-                        className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isGenerating ? (
-                          <>
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            Regenerating...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw className="h-3.5 w-3.5" />
-                            Regenerate
-                          </>
-                        )}
-                      </Button>
-                    </>
-                  )}
-                </div>
-                <div className="inline-flex items-center gap-5 text-[0.7rem] text-muted-foreground ml-auto">
-                  <div className="inline-flex items-center gap-2">
-                    <span>Length</span>
-                    <div className="inline-flex items-center rounded-full border border-border bg-card overflow-hidden">
-                    <button
-                      onClick={() => {
-                        setLength("short");
-                        setIsManualLength(true);
-                      }}
-                      className={cn(
-                        "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
-                        effectiveLength === "short"
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-muted"
-                      )}
-                    >
-                      Short
-                    </button>
-                    <button
-                      onClick={() => {
-                        setLength("medium");
-                        setIsManualLength(true);
-                      }}
-                      className={cn(
-                        "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
-                        effectiveLength === "medium"
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-muted"
-                      )}
-                    >
-                      Medium
-                    </button>
-                    <button
-                      onClick={() => {
-                        setLength("long");
-                        setIsManualLength(true);
-                      }}
-                      className={cn(
-                        "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
-                        effectiveLength === "long"
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-muted"
-                      )}
-                    >
-                      Long
-                    </button>
-                    </div>
-                  </div>
-                  <div className="inline-flex items-center gap-2">
-                    <span>Emoji</span>
-                    <div className="inline-flex items-center rounded-full border border-border bg-card overflow-hidden">
-                    <button
-                      onClick={() => {
-                        setEmojiEnabled(false);
-                        setIsManualEmoji(true);
-                      }}
-                      className={cn(
-                        "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
-                        !effectiveEmoji
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-muted"
-                      )}
-                    >
-                      No
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEmojiEnabled(true);
-                        setIsManualEmoji(true);
-                      }}
-                      className={cn(
-                        "px-2 py-1 text-[0.7rem] font-medium transition-colors cursor-pointer",
-                        effectiveEmoji
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-muted"
-                      )}
-                    >
-                      Yes
-                    </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <GeneratedReplySection
+              selectedTonePreset={selectedTonePreset}
+              onTonePresetChange={setSelectedTonePreset}
+              selectedProfile={selectedProfile}
+              generatedReply={generatedReply}
+              message={message}
+              isReplyGenerated={isReplyGenerated}
+              isGenerating={isGenerating}
+              isCopied={isCopied}
+              effectiveLength={effectiveLength}
+              effectiveEmoji={effectiveEmoji}
+              onLengthChange={handleLengthChange}
+              onEmojiChange={handleEmojiChange}
+              onGenerateReply={handleGenerateReply}
+              onCopyToClipboard={handleCopyToClipboard}
+            />
 
             {/* Small insight footer */}
             {selectedProfileObj && (

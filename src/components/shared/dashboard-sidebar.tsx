@@ -133,15 +133,6 @@ export function DashboardSidebar() {
                   {profileCount !== null ? profileCount : "..."}
                 </span>
               )}
-              {item.href === "/dashboard/generator" && (
-                <span className="text-[0.75rem] text-muted-foreground">Active</span>
-              )}
-              {item.href === "/dashboard/conversations" && (
-                <span className="text-[0.75rem] text-muted-foreground">+ Upload</span>
-              )}
-              {item.href === "/dashboard/settings" && (
-                <span className="text-[0.75rem] text-muted-foreground">Plan</span>
-              )}
             </Link>
           );
         })}

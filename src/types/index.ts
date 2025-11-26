@@ -80,10 +80,17 @@ export interface Embedding {
 
 export interface GeneratedReply {
   id: string; // UUID
-  profile_id: string; // UUID
+  profile_id: string | null; // UUID (nullable)
   user_id: string; // text
   prompt_payload: Record<string, unknown>; // JSONB
   model_response: string;
   created_at: Date;
+}
+
+export interface GeneratedReplyWithProfile extends GeneratedReply {
+  profile?: {
+    id: string;
+    name: string;
+  } | null;
 }
 
