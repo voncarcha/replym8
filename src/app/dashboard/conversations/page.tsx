@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
-import { ConversationList } from "@/components/shared/conversation-list";
+import { ConversationsContent } from "@/components/shared/conversations-content";
 import { getGeneratedReplies } from "@/app/actions/conversations";
+import { getProfiles } from "@/app/actions/profile";
 
 export default async function ConversationsPage() {
   const { userId } = await auth();
@@ -9,7 +10,10 @@ export default async function ConversationsPage() {
     return null;
   }
 
-  const replies = await getGeneratedReplies();
+  const [replies, profiles] = await Promise.all([
+    getGeneratedReplies(),
+    getProfiles(),
+  ]);
 
   return (
     <>
@@ -31,7 +35,7 @@ export default async function ConversationsPage() {
       </div>
 
       {/* Content */}
-      <div className="px-4 sm:px-5 pb-4 space-y-3 overflow-y-auto pt-4">
+      <div className="pt-4">
         {/* Upload area - commented out for now */}
         {/* <Card className="rounded-xl border-dashed border-border bg-card/60 p-6 sm:p-8 space-y-3 text-center">
           <div className="flex justify-center">
@@ -56,8 +60,8 @@ export default async function ConversationsPage() {
           </Button>
         </Card> */}
 
-        {/* Conversation list */}
-        <ConversationList replies={replies} />
+        {/* Conversation list with filter */}
+        <ConversationsContent replies={replies} profiles={profiles} />
       </div>
     </>
   );

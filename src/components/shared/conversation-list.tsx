@@ -1,14 +1,25 @@
+"use client";
+
 import { GeneratedReplyWithProfile } from "@/types";
 import { ConversationItem } from "./conversation-item";
 import { FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useMemo } from "react";
 
 interface ConversationListProps {
   replies: GeneratedReplyWithProfile[];
+  filterProfileId: string | null;
 }
 
-export function ConversationList({ replies }: ConversationListProps) {
-  if (replies.length === 0) {
+export function ConversationList({ replies, filterProfileId }: ConversationListProps) {
+  const filteredReplies = useMemo(() => {
+    if (!filterProfileId) {
+      return replies;
+    }
+    return replies.filter((reply) => reply.profile_id === filterProfileId);
+  }, [replies, filterProfileId]);
+
+  if (filteredReplies.length === 0) {
     return (
       <Card className="rounded-xl border-border bg-card/60 p-6 sm:p-8 space-y-3 text-center">
         <div className="flex justify-center">
@@ -17,9 +28,13 @@ export function ConversationList({ replies }: ConversationListProps) {
           </div>
         </div>
         <div>
-          <h4 className="text-sm font-medium text-foreground">No conversations yet</h4>
+          <h4 className="text-sm font-medium text-foreground">
+            {filterProfileId ? "No conversations found" : "No conversations yet"}
+          </h4>
           <p className="text-sm text-muted-foreground mt-1">
-            Your generated replies will appear here once you start creating them.
+            {filterProfileId
+              ? "No generated replies found for the selected profile."
+              : "Your generated replies will appear here once you start creating them."}
           </p>
         </div>
       </Card>
@@ -28,7 +43,7 @@ export function ConversationList({ replies }: ConversationListProps) {
 
   return (
     <div className="space-y-2">
-      {replies.map((reply) => (
+      {filteredReplies.map((reply) => (
         <ConversationItem key={reply.id} reply={reply} />
       ))}
     </div>
