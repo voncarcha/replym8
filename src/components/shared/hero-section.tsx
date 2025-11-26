@@ -35,8 +35,8 @@ export async function HeroSection() {
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-sky-500 text-white text-sm font-medium tracking-tight px-4 sm:px-5 py-2.5 hover:bg-sky-400 shadow-sm shadow-sky-500/40"
             >
               <Link href={redirectUrl}>
-                <span>Generate smarter replies</span>
-                <ArrowUpRight className="h-4 w-4" />
+              <span>Generate smarter replies</span>
+              <ArrowUpRight className="h-4 w-4" />
               </Link>
             </Button>
             {/* <Button
