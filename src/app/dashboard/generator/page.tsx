@@ -8,7 +8,7 @@ import { ProfileWithMembers, getProfiles } from "@/app/actions/profile";
 import { toast } from "sonner";
 import { getTonePresetById } from "@/lib/tone-presets";
 import { presetIdToTonePreferences } from "@/lib/tone-preset-utils";
-import { ModeToggle } from "@/components/shared/mode-toggle";
+// import { ModeToggle } from "@/components/shared/mode-toggle";
 import { ReplyInputSection } from "@/components/shared/reply-input-section";
 import { ComposeInputSection } from "@/components/shared/compose-input-section";
 import { ProfileSelector } from "@/components/shared/profile-selector";
@@ -20,6 +20,7 @@ type AIAgent = "groq" | "openai";
 type GroqModel = "llama-3.1-8b-instant" | "llama-3.3-70b-versatile";
 
 export default function ReplyGeneratorPage() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [mode, setMode] = useState<Mode>("reply");
   const [length, setLength] = useState<Length>("short");
   const [aiAgent, setAiAgent] = useState<AIAgent>("groq");
@@ -284,9 +285,9 @@ export default function ReplyGeneratorPage() {
             Paste a message, compose from scratch, choose a profile, and fine-tune your reply.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-5">
+        {/* <div className="flex flex-wrap items-center gap-5">
           <ModeToggle mode={mode} onModeChange={setMode} />
-        </div>
+        </div> */}
       </div>
 
       {/* Content */}
