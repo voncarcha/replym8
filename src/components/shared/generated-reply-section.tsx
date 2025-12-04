@@ -15,6 +15,7 @@ interface GeneratedReplySectionProps {
   selectedProfile: string | null;
   generatedReply: string;
   message: string;
+  additionalContext?: string;
   isReplyGenerated: boolean;
   isGenerating: boolean;
   isCopied: boolean;
@@ -32,6 +33,7 @@ export function GeneratedReplySection({
   selectedProfile,
   generatedReply,
   message,
+  additionalContext = "",
   isReplyGenerated,
   isGenerating,
   isCopied,
@@ -42,6 +44,7 @@ export function GeneratedReplySection({
   onGenerateReply,
   onCopyToClipboard,
 }: GeneratedReplySectionProps) {
+  const canGenerate = message.trim().length > 0 || additionalContext.trim().length > 0;
   return (
     <Card className="rounded-xl border-border bg-card/80 p-3 sm:p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -71,9 +74,9 @@ export function GeneratedReplySection({
         <p className="text-sm text-foreground whitespace-pre-wrap">
           {isReplyGenerated
             ? generatedReply
-            : message
+            : canGenerate
             ? "Click 'Generate reply' to create a response..."
-            : "Generated reply will appear here after you paste a message..."}
+            : "Generated reply will appear here after you paste a message or add response instructions..."}
         </p>
       </div>
       <div className="flex flex-wrap gap-2 items-center">
@@ -82,7 +85,7 @@ export function GeneratedReplySection({
             <Button
               size="sm"
               onClick={onGenerateReply}
-              disabled={!message.trim() || isGenerating}
+              disabled={!canGenerate || isGenerating}
               className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-3 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isGenerating ? (
@@ -121,7 +124,7 @@ export function GeneratedReplySection({
                 variant="outline"
                 size="sm"
                 onClick={onGenerateReply}
-                disabled={!message.trim() || isGenerating}
+                disabled={!canGenerate || isGenerating}
                 className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isGenerating ? (

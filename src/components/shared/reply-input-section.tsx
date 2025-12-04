@@ -45,13 +45,13 @@ export function ReplyInputSection({
       </div>
       <textarea
         className="w-full rounded-lg border border-border bg-background text-sm text-foreground px-2.5 py-2 min-h-24 focus:outline-none focus:ring-1 focus:ring-primary"
-        placeholder="Paste the message you need to reply to..."
+        placeholder="Paste the message you need to reply to (optional if you provide response instructions below)..."
         value={message}
         onChange={(e) => onMessageChange(e.target.value)}
       />
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>
-          Tip: include a few lines of previous context for best results.
+          Optional: paste a message to reply to, or use response instructions below to compose from scratch.
         </span>
         <span>{message.length} / 2,000 chars</span>
       </div>
@@ -67,7 +67,7 @@ export function ReplyInputSection({
         />
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            Optional: provide context or intent to guide the AI reply.
+            Provide context, intent, or instructions. Required if no incoming message is provided.
           </span>
           <span>{additionalContext.length} / 500 chars</span>
         </div>

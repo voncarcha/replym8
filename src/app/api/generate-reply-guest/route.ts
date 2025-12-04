@@ -35,9 +35,13 @@ export async function POST(req: NextRequest) {
       tonePreset = "casual",
     } = await req.json();
 
-    if (!message || typeof message !== "string") {
+    // Message is required unless additionalContext is provided (free compose mode)
+    const hasMessage = message && typeof message === "string" && message.trim().length > 0;
+    const hasAdditionalContext = additionalContext && typeof additionalContext === "string" && additionalContext.trim().length > 0;
+    
+    if (!hasMessage && !hasAdditionalContext) {
       return NextResponse.json(
-        { error: "Message is required" },
+        { error: "Either a message or response instructions are required" },
         { status: 400 }
       );
     }
@@ -62,28 +66,27 @@ Your replies should:
 - Avoid robotic transitions ("Furthermore", "In conclusion").
 - Add subtle personality, warmth, and context awareness.
 - Be concise unless user asks otherwise.
+${emojiEnabled ? "- MUST include emojis in your reply. Use 1-3 relevant emojis naturally throughout the message to add warmth and expressiveness." : "- Do NOT use any emojis in your reply."}
 - Never mention you're an AI or model.
 - Respond exactly like a real person texting or emailing.
 
 If the user writes casually, match their tone. If the user writes formally, match it but keep it human.
 ${llmInstruction ? `\n\nTone instruction: ${llmInstruction}` : ""}
-${emojiEnabled ? "\n- You may use emojis appropriately in the reply." : "\n- Do not use emojis in the reply."}
+${emojiEnabled ? "\n\nCRITICAL: Emoji usage is REQUIRED. You MUST include 1-3 relevant emojis in your reply. Use emojis naturally to express emotion, add warmth, and make the message feel more human and engaging. Examples: 😊 👍 🎉 💯 ✨ 🔥 💪" : "\n\nCRITICAL: Emoji usage is FORBIDDEN. Do NOT use any emojis whatsoever in your reply."}
 
 ALWAYS output only the ready-to-send reply message. No explanations.`;
 
     // Construct user prompt
-    const userPrompt = `Here is the incoming message:
-
-"${message}"
-${additionalContext ? `\n\nAdditional context and intent:\n${additionalContext}` : ""}
+    const userPrompt = `${hasMessage ? `Here is the incoming message:\n\n"${message}"` : "The user wants to compose a new message from scratch."}
+${hasAdditionalContext ? `\n\nResponse instructions and context:\n${additionalContext}` : ""}
 
 Here are the user's settings:
 
 Tone: ${preset?.name || "Casual"}
 Length: ${length}
-Emoji: ${emojiEnabled ? "Allowed" : "Not allowed"}
+Emoji: ${emojiEnabled ? "REQUIRED - You MUST include 1-3 emojis in your reply" : "FORBIDDEN - Do NOT use any emojis"}
 
-Generate the best possible reply.`;
+${hasMessage ? "Generate the best possible reply." : "Generate a message based on the response instructions provided above."}`;
 
     const completion = await client.chat.completions.create({
       model: modelName,

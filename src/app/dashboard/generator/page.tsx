@@ -178,7 +178,11 @@ export default function ReplyGeneratorPage() {
   }, [selectedProfileObj, isManualLength, isManualEmoji, selectedTonePreset]);
 
   const handleGenerateReply = async () => {
-    if (!message.trim()) return;
+    // Allow generation if either message or additionalContext is provided
+    const hasMessage = message.trim().length > 0;
+    const hasAdditionalContext = additionalContext.trim().length > 0;
+    
+    if (!hasMessage && !hasAdditionalContext) return;
 
     setIsGenerating(true);
     setError(null);
@@ -192,10 +196,10 @@ export default function ReplyGeneratorPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message,
-          additionalContext: additionalContext.trim() || undefined,
+          message: hasMessage ? message : undefined,
+          additionalContext: hasAdditionalContext ? additionalContext.trim() : undefined,
           profileId: selectedProfile,
-          length,
+          length: effectiveLength,
           emojiEnabled: effectiveEmoji,
           replyId: replyId, // Include replyId if regenerating
           aiAgent, // Include selected AI agent
@@ -412,6 +416,7 @@ export default function ReplyGeneratorPage() {
               selectedProfile={selectedProfile}
               generatedReply={generatedReply}
               message={message}
+              additionalContext={additionalContext}
               isReplyGenerated={isReplyGenerated}
               isGenerating={isGenerating}
               isCopied={isCopied}

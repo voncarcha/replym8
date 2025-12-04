@@ -29,9 +29,13 @@ export async function POST(req: NextRequest) {
       tonePreset, // Optional: if provided, overrides profile tone
     } = await req.json();
 
-    if (!message || typeof message !== "string") {
+    // Message is required unless additionalContext is provided (free compose mode)
+    const hasMessage = message && typeof message === "string" && message.trim().length > 0;
+    const hasAdditionalContext = additionalContext && typeof additionalContext === "string" && additionalContext.trim().length > 0;
+    
+    if (!hasMessage && !hasAdditionalContext) {
       return NextResponse.json(
-        { error: "Message is required" },
+        { error: "Either a message or response instructions are required" },
         { status: 400 }
       );
     }
@@ -195,15 +199,23 @@ ${profile.notes ? `Notes: ${profile.notes}` : ""}`;
     }
 
     // Generate reply using LLM
-    // Use profile's preferred length if available, otherwise use the length parameter from UI
-    const effectiveLength = profilePreferredLength
+    // Prioritize UI values (length and emojiEnabled) over profile values
+    // The length parameter from UI represents the effective length (already calculated on frontend)
+    const effectiveLength = length || (profilePreferredLength
       ? (profilePreferredLength.toLowerCase() as "short" | "medium" | "long")
-      : length;
+      : "medium");
 
-    // Use emojiEnabled from request if provided, otherwise derive from profile
+    // Prioritize emojiEnabled from request (effectiveEmoji from UI) over profile preference
     const effectiveEmojiEnabled = emojiEnabled !== undefined 
       ? emojiEnabled 
       : (profileEmojiUsage === "Allowed");
+    
+    // Debug log to verify emoji value
+    console.log("Emoji settings:", {
+      uiEmojiEnabled: emojiEnabled,
+      effectiveEmojiEnabled,
+      profileEmojiUsage,
+    });
 
     // Humanization system prompt with history awareness for both Groq and OpenAI
     const systemPrompt = `You are a human writing natural, casual messages.
@@ -216,6 +228,7 @@ Your replies should:
 - Avoid robotic transitions ("Furthermore", "In conclusion").
 - Add subtle personality, warmth, and context awareness.
 - Be concise unless user asks otherwise.
+${effectiveEmojiEnabled ? "- MUST include emojis in your reply. Use 1-3 relevant emojis naturally throughout the message to add warmth and expressiveness." : "- Do NOT use any emojis in your reply."}
 - Never mention you're an AI or model.
 - Respond exactly like a real person texting or emailing.
 
@@ -237,7 +250,7 @@ Rules for using past messages:
 If the user writes casually, match their tone. If the user writes formally, match it but keep it human.
 ${profileContext ? `\n\nProfile context:${profileContext}` : ""}
 ${llmInstruction ? `\n\nTone instruction: ${llmInstruction}` : ""}
-${effectiveEmojiEnabled ? "\n\nEmoji usage: You may use emojis appropriately in the reply." : "\n\nEmoji usage: Do not use emojis in the reply."}
+${effectiveEmojiEnabled ? "\n\nCRITICAL: Emoji usage is REQUIRED. You MUST include 1-3 relevant emojis in your reply. Use emojis naturally to express emotion, add warmth, and make the message feel more human and engaging. Examples: 😊 👍 🎉 💯 ✨ 🔥 💪" : "\n\nCRITICAL: Emoji usage is FORBIDDEN. Do NOT use any emojis whatsoever in your reply."}
 
 ALWAYS output only the ready-to-send reply message. No explanations.`;
 
@@ -246,19 +259,17 @@ ALWAYS output only the ready-to-send reply message. No explanations.`;
 
 ${conversationHistory || "(No previous conversation history)"}
 
-Here is the new incoming message:
-
-"${message}"
-${additionalContext ? `\n\nAdditional context and intent:\n${additionalContext}` : ""}
+${hasMessage ? `Here is the new incoming message:\n\n"${message}"` : "The user wants to compose a new message from scratch."}
+${hasAdditionalContext ? `\n\nResponse instructions and context:\n${additionalContext}` : ""}
 
 Here are the user's settings:
 
 Tone: ${tone}
 Length: ${effectiveLength}
-Emoji: ${effectiveEmojiEnabled ? "Allowed" : "Not allowed"}
+Emoji: ${effectiveEmojiEnabled ? "REQUIRED - You MUST include 1-3 emojis in your reply" : "FORBIDDEN - Do NOT use any emojis"}
 Tags: ${profileTags.join(", ") || "None"}
 
-Generate the best possible reply.`;
+${hasMessage ? "Generate the best possible reply." : "Generate a message based on the response instructions provided above."}`;
 
     const completion = await client.chat.completions.create({
       model: modelName,
@@ -287,7 +298,7 @@ Generate the best possible reply.`;
           .from("generated_replies")
           .update({
             prompt_payload: {
-              message,
+              message: message || null,
               additionalContext: additionalContext || null,
               length,
               systemPrompt,
@@ -314,7 +325,7 @@ Generate the best possible reply.`;
             profile_id: profileId,
             user_id: userId,
             prompt_payload: {
-              message,
+              message: message || null,
               additionalContext: additionalContext || null,
               length,
               systemPrompt,
@@ -345,6 +356,9 @@ Generate the best possible reply.`;
         lengthUsed: effectiveLength,
         uiLength: length,
         profilePreferredLength: profilePreferredLength || null,
+        emojiEnabled: effectiveEmojiEnabled,
+        uiEmojiEnabled: emojiEnabled,
+        profileEmojiUsage: profileEmojiUsage || null,
         aiProvider,
         model,
       },

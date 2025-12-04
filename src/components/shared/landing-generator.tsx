@@ -26,7 +26,11 @@ export function LandingGenerator() {
   const [remainingGenerations, setRemainingGenerations] = useState<number | null>(null);
 
   const handleGenerateReply = async () => {
-    if (!message.trim()) return;
+    // Allow generation if either message or additionalContext is provided
+    const hasMessage = message.trim().length > 0;
+    const hasAdditionalContext = additionalContext.trim().length > 0;
+    
+    if (!hasMessage && !hasAdditionalContext) return;
 
     setIsGenerating(true);
     setError(null);
@@ -39,8 +43,8 @@ export function LandingGenerator() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message,
-          additionalContext: additionalContext.trim() || undefined,
+          message: hasMessage ? message : undefined,
+          additionalContext: hasAdditionalContext ? additionalContext.trim() : undefined,
           length,
           emojiEnabled,
           tonePreset: selectedTonePreset,
@@ -265,7 +269,7 @@ export function LandingGenerator() {
                     <Button
                       size="sm"
                       onClick={handleGenerateReply}
-                      disabled={!message.trim() || isGenerating}
+                      disabled={(!message.trim() && !additionalContext.trim()) || isGenerating}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium px-3 py-1.5 hover:bg-primary/90 h-auto disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isGenerating ? (
@@ -304,7 +308,7 @@ export function LandingGenerator() {
                         variant="outline"
                         size="sm"
                         onClick={handleGenerateReply}
-                        disabled={!message.trim() || isGenerating}
+                        disabled={(!message.trim() && !additionalContext.trim()) || isGenerating}
                         className="inline-flex items-center gap-1.5 rounded-lg border-border bg-card text-sm text-foreground px-2.5 py-1.5 hover:bg-muted h-auto disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isGenerating ? (
